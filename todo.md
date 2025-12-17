@@ -332,3 +332,13 @@
 - [ ] Test mobile app on Android device/emulator
 - [x] Create setup instructions and documentation
 - [ ] Package mobile app for distribution (APK/AAB)
+
+## EAS Build & Play Store Publishing
+- [x] Install EAS CLI globally
+- [x] Create eas.json configuration file
+- [x] Configure build profiles (development, preview, production)
+- [x] Set up Android package name and bundle identifier
+- [ ] Configure app signing credentials
+- [ ] Create production build for Play Store (AAB)
+- [ ] Create preview build for testing (APK)
+- [x] Document build and submission process
