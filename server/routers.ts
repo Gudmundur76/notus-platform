@@ -8,8 +8,9 @@ import { invokeLLM } from "./_core/llm";
 import { generateImage } from "./_core/imageGeneration";
 import { storagePut } from "./storage";
 import { nanoid } from "nanoid";
+import { executeAgentTask } from "./agent-engine";
 
-// Async task processing function
+// OpenManus-style agent task processing
 async function processTaskAsync(
   taskId: number,
   userId: number,
@@ -19,53 +20,45 @@ async function processTaskAsync(
   try {
     await updateTaskStatus(taskId, "processing");
 
-    // Generate AI response based on task type
-    let content = "";
-    const fileUrls: string[] = [];
+    // Execute task using OpenManus-style agent engine
+    const agentResult = await executeAgentTask({
+      taskId: `task-${taskId}`,
+      instruction: description,
+      taskType: taskType as any,
+      context: { userId },
+    });
 
-    if (taskType === "design" || taskType === "slides") {
-      // Generate image for design/slides tasks
-      const imageResult = await generateImage({
-        prompt: description,
+    if (agentResult.success) {
+      // Extract file URLs from agent result
+      const fileUrls = agentResult.files?.map(f => f.url) || [];
+      
+      // Save result with agent execution details
+      await createTaskResult({
+        taskId,
+        content: agentResult.result,
+        fileUrls: JSON.stringify(fileUrls),
+        metadata: JSON.stringify({ 
+          taskType, 
+          processedAt: new Date().toISOString(),
+          agentSteps: agentResult.steps.length,
+          files: agentResult.files || []
+        }),
       });
-      if (imageResult.url) {
-        fileUrls.push(imageResult.url);
-      }
-      content = `Generated design based on: "${description}"`;
+
+      await updateTaskStatus(taskId, "completed");
+
+      // Create success notification
+      await createNotification({
+        userId,
+        taskId,
+        title: "Task Completed",
+        message: `Your ${taskType} task has been completed successfully using AI agent.`,
+        type: "success",
+        isRead: 0,
+      });
     } else {
-      // Use LLM for other task types
-      const response = await invokeLLM({
-        messages: [
-          {
-            role: "system",
-            content: `You are an AI assistant helping users with ${taskType} tasks. Provide detailed, actionable responses.`,
-          },
-          { role: "user", content: description },
-        ],
-      });
-      const messageContent = response.choices[0]?.message?.content;
-      content = typeof messageContent === "string" ? messageContent : "No response generated";
+      throw new Error(agentResult.error || "Agent execution failed");
     }
-
-    // Save result
-    await createTaskResult({
-      taskId,
-      content,
-      fileUrls: JSON.stringify(fileUrls),
-      metadata: JSON.stringify({ taskType, processedAt: new Date().toISOString() }),
-    });
-
-    await updateTaskStatus(taskId, "completed");
-
-    // Create notification
-    await createNotification({
-      userId,
-      taskId,
-      title: "Task Completed",
-      message: `Your ${taskType} task has been completed successfully.`,
-      type: "success",
-      isRead: 0,
-    });
   } catch (error) {
     console.error("Task processing error:", error);
     await updateTaskStatus(taskId, "failed");
