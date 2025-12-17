@@ -6,6 +6,7 @@ import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
+import { initializeScheduledLearning } from "../scheduled-learning";
 import { serveStatic, setupVite } from "./vite";
 
 function isPortAvailable(port: number): Promise<boolean> {
@@ -59,6 +60,13 @@ async function startServer() {
 
   server.listen(port, () => {
     console.log(`Server running on http://localhost:${port}/`);
+    
+    // Initialize scheduled learning jobs
+    try {
+      initializeScheduledLearning();
+    } catch (error) {
+      console.error("Failed to initialize scheduled learning:", error);
+    }
   });
 }
 

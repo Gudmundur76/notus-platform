@@ -11,6 +11,13 @@ import {
   searchKnowledge,
   getDialogueHistory,
 } from "./mirror-agents";
+import { seedAgents } from "./seed-agents";
+import {
+  initializeScheduledLearning,
+  getScheduledJobs,
+  setJobEnabled,
+  triggerJob,
+} from "./scheduled-learning";
 import {
   aggregateKnowledgeAcrossDomains,
   getKnowledgeStats,
@@ -160,5 +167,29 @@ export const mirrorAgentRouter = router({
     .input(z.object({ knowledgeId: z.number() }))
     .query(async ({ input }) => {
       return await getKnowledgeEvolution(input.knowledgeId);
+    }),
+
+  // Seed initial agents
+  seedAgents: protectedProcedure.mutation(async () => {
+    return await seedAgents();
+  }),
+
+  // Scheduled learning management
+  getScheduledJobs: protectedProcedure.query(async () => {
+    return getScheduledJobs();
+  }),
+
+  setJobEnabled: protectedProcedure
+    .input(z.object({ name: z.string(), enabled: z.boolean() }))
+    .mutation(async ({ input }) => {
+      setJobEnabled(input.name, input.enabled);
+      return { success: true };
+    }),
+
+  triggerJob: protectedProcedure
+    .input(z.object({ name: z.string() }))
+    .mutation(async ({ input }) => {
+      await triggerJob(input.name);
+      return { success: true };
     }),
 });

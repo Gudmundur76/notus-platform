@@ -199,3 +199,33 @@
   - [x] Test continuous learning pipeline
   - [x] Integration tests with existing task system
   - [x] All 55 tests passing (9 mirror agent tests)
+## Agent Seeding & Initialization
+- [x] Create seed script for initial agent pairs
+- [x] Define domain-specific system prompts (biotech, finance, legal, marketing, tech)
+- [x] Create agent pairs with complementary perspectives
+- [x] Run initial debates to generate foundational knowledge
+- [x] Populate knowledge core with seed insights
+- [x] Add seed endpoint to tRPC API
+- [x] Add seed button to Mirror Agents UI
+
+## Scheduled Continuous Learning
+- [x] Implement cron-based scheduling system
+- [x] Create daily knowledge aggregation job (2 AM daily)
+- [x] Create weekly cross-domain learning job (3 AM Sunday)
+- [x] Add job status monitoring and logging
+- [x] Implement failure recovery and retry logic
+- [x] Add admin interface for job management
+- [x] Auto-initialize on server startup
+- [x] Scheduled Jobs tab in Mirror Agents UI
+- [x] Manual trigger and enable/disable controls
+
+## Knowledge Visualization Dashboard
+- [x] Design graph visualization for knowledge connections
+- [x] Implement domain relationship network view (Force Graph 2D)
+- [x] Create insight evolution timeline
+- [x] Build agent contribution metrics charts
+- [x] Add interactive filtering and exploration
+- [x] Multiple view modes (network, timeline, contributions)
+- [x] Domain filtering (all, biotech, finance, legal, marketing, tech)
+- [x] Real-time data from tRPC queries
+- [x] Added to navigation (Knowledge Graph page)

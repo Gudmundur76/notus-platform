@@ -6,6 +6,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 import NotFound from "./pages/NotFound";
 import MirrorAgents from "./pages/MirrorAgents";
+import KnowledgeGraph from "./pages/KnowledgeGraph";
 import Dashboard from "./pages/Dashboard";
 
 function Router() {
@@ -14,6 +15,7 @@ function Router() {
     <Switch>
       <Route path={"/"} component={Home} />
       <Route path={"/mirror-agents"} component={MirrorAgents} />
+      <Route path={"/knowledge-graph"} component={KnowledgeGraph} />
       <Route path={"/dashboard"} component={Dashboard} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}

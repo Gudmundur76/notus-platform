@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Brain, Users, MessageSquare, Database, TrendingUp, Sparkles } from "lucide-react";
+import { Users, Sparkles, MessageSquare, Database, TrendingUp, Loader2, Plus, Clock, Brain } from "lucide-react";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -23,7 +23,8 @@ export default function MirrorAgents() {
 
   // Queries
   const { data: agents, isLoading: agentsLoading, refetch: refetchAgents } = trpc.mirrorAgents.listAgents.useQuery();
-  const { data: knowledgeStats, isLoading: statsLoading } = trpc.mirrorAgents.getKnowledgeStats.useQuery();
+  const { data: scheduledJobs, isLoading: jobsLoading, refetch: refetchJobs } = trpc.mirrorAgents.getScheduledJobs.useQuery();
+  const { data: knowledgeStats } = trpc.mirrorAgents.getKnowledgeStats.useQuery();
 
   // Mutations
   const createAgentMutation = trpc.mirrorAgents.createAgent.useMutation({
@@ -66,6 +67,36 @@ export default function MirrorAgents() {
     },
   });
 
+  const seedAgentsMutation = trpc.mirrorAgents.seedAgents.useMutation({
+    onSuccess: (result) => {
+      toast.success(`Agents seeded: ${result.agentPairs} pairs, ${result.debates} debates, ${result.insights} insights`);
+      refetchAgents();
+    },
+    onError: (error) => {
+      toast.error(`Failed to seed agents: ${error.message}`);
+    },
+  });
+
+  const triggerJobMutation = trpc.mirrorAgents.triggerJob.useMutation({
+    onSuccess: () => {
+      toast.success("Job triggered successfully");
+      refetchJobs();
+    },
+    onError: (error) => {
+      toast.error(`Failed to trigger job: ${error.message}`);
+    },
+  });
+
+  const setJobEnabledMutation = trpc.mirrorAgents.setJobEnabled.useMutation({
+    onSuccess: () => {
+      toast.success("Job status updated");
+      refetchJobs();
+    },
+    onError: (error) => {
+      toast.error(`Failed to update job: ${error.message}`);
+    },
+  });
+
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -89,10 +120,10 @@ export default function MirrorAgents() {
 
   const filteredAgents = selectedDomain === "all" 
     ? agents 
-    : agents?.filter(a => a.domain === selectedDomain);
+    : agents?.filter((a: any) => a.domain === selectedDomain);
 
-  const primaryAgents = filteredAgents?.filter(a => a.type === "primary") || [];
-  const mirrorAgents = filteredAgents?.filter(a => a.type === "mirror") || [];
+  const primaryAgents = filteredAgents?.filter((a: any) => a.type === "primary") || [];
+  const mirrorAgents = filteredAgents?.filter((a: any) => a.type === "mirror") || [];
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
@@ -109,7 +140,7 @@ export default function MirrorAgents() {
         </div>
 
         {/* Stats Overview */}
-        {!statsLoading && knowledgeStats && (
+        {knowledgeStats && (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
             <Card>
               <CardHeader className="pb-2">
@@ -175,7 +206,26 @@ export default function MirrorAgents() {
         )}
 
         {/* Action Buttons */}
-        <div className="flex gap-4 mb-8">
+        <div className="flex flex-wrap gap-4 mb-8">
+          <Button
+            onClick={() => seedAgentsMutation.mutate()}
+            disabled={seedAgentsMutation.isPending}
+            variant="default"
+            size="lg"
+          >
+            {seedAgentsMutation.isPending ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Seeding Agents...
+              </>
+            ) : (
+              <>
+                <Sparkles className="mr-2 h-4 w-4" />
+                Seed Initial Agents
+              </>
+            )}
+          </Button>
+
           <Dialog open={createAgentOpen} onOpenChange={setCreateAgentOpen}>
             <DialogTrigger asChild>
               <Button>
@@ -355,9 +405,10 @@ export default function MirrorAgents() {
 
         {/* Main Content */}
         <Tabs defaultValue="agents" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 max-w-md">
+          <TabsList className="grid w-full grid-cols-4 max-w-2xl">
             <TabsTrigger value="agents">Agents</TabsTrigger>
             <TabsTrigger value="knowledge">Knowledge Core</TabsTrigger>
+            <TabsTrigger value="jobs">Scheduled Jobs</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
           </TabsList>
 
@@ -409,6 +460,81 @@ export default function MirrorAgents() {
 
           <TabsContent value="knowledge" className="space-y-4">
             <KnowledgeCoreView />
+          </TabsContent>
+
+          <TabsContent value="jobs" className="space-y-4">
+            {jobsLoading ? (
+              <div className="flex justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : scheduledJobs && scheduledJobs.length > 0 ? (
+              <div className="space-y-4">
+                {scheduledJobs.map((job: any) => (
+                  <Card key={job.name}>
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <CardTitle className="text-lg">
+                            {job.name.replace(/_/g, " ").replace(/\b\w/g, (l: string) => l.toUpperCase())}
+                          </CardTitle>
+                          <CardDescription>Schedule: {job.schedule}</CardDescription>
+                        </div>
+                        <Badge variant={job.status === "running" ? "default" : job.status === "failed" ? "destructive" : "secondary"}>
+                          {job.status}
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        {job.nextRun && (
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground">Next run:</span>
+                            <span>{new Date(job.nextRun).toLocaleString()}</span>
+                          </div>
+                        )}
+                        {job.lastRun && (
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground">Last run:</span>
+                            <span>{new Date(job.lastRun).toLocaleString()}</span>
+                          </div>
+                        )}
+                        {job.errorMessage && (
+                          <div className="text-sm text-destructive">
+                            Error: {job.errorMessage}
+                          </div>
+                        )}
+                        <div className="flex gap-2 pt-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => triggerJobMutation.mutate({ name: job.name })}
+                            disabled={triggerJobMutation.isPending || job.status === "running"}
+                          >
+                            {triggerJobMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                            Run Now
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant={job.enabled ? "destructive" : "default"}
+                            onClick={() => setJobEnabledMutation.mutate({ name: job.name, enabled: !job.enabled })}
+                            disabled={setJobEnabledMutation.isPending}
+                          >
+                            {job.enabled ? "Disable" : "Enable"}
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <Card>
+                <CardContent className="py-12 text-center">
+                  <Clock className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                  <p className="text-muted-foreground">No scheduled jobs configured</p>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
 
           <TabsContent value="analytics" className="space-y-4">

@@ -55,6 +55,11 @@ export default function Header() {
                 Mirror Agents
               </span>
             </Link>
+            <Link href="/knowledge-graph">
+              <span className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
+                Knowledge Graph
+              </span>
+            </Link>
           </nav>
 
           {/* Auth Buttons */}
@@ -127,6 +132,11 @@ export default function Header() {
               <Link href="/mirror-agents">
                 <span className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
                   Mirror Agents
+                </span>
+              </Link>
+              <Link href="/knowledge-graph">
+                <span className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
+                  Knowledge Graph
                 </span>
               </Link>
               <div className="flex flex-col gap-2 pt-2 border-t border-border">
