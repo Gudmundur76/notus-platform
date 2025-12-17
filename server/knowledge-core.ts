@@ -7,6 +7,7 @@ import { invokeLLM } from "./_core/llm";
 import { getDb } from "./db";
 import { knowledgeCore, agents, type KnowledgeCore, type InsertKnowledgeCore } from "../drizzle/schema";
 import { eq, and, desc, inArray, sql } from "drizzle-orm";
+import { generateEmbedding } from "./embeddings";
 
 /**
  * Aggregate knowledge across domains
@@ -323,6 +324,14 @@ export async function runContinuousLearning(): Promise<{
   // Store cross-domain insights as new knowledge
   let newInsights = 0;
   for (const connection of connections) {
+    // Generate embedding for the insight
+    let embedding: number[] = [];
+    try {
+      embedding = await generateEmbedding(connection.insights);
+    } catch (error) {
+      console.error("[Knowledge Core] Failed to generate embedding:", error);
+    }
+
     const crossDomainKnowledge: InsertKnowledgeCore = {
       domain: "cross-domain",
       topic: `${connection.domain1} ↔ ${connection.domain2}`,
@@ -331,6 +340,7 @@ export async function runContinuousLearning(): Promise<{
       sourceDialogueIds: JSON.stringify([]),
       contributingAgents: JSON.stringify([]),
       tags: JSON.stringify(["cross-domain", connection.domain1, connection.domain2]),
+      embedding: embedding.length > 0 ? JSON.stringify(embedding) : undefined,
     };
 
     await db.insert(knowledgeCore).values(crossDomainKnowledge);

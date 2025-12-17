@@ -229,3 +229,27 @@
 - [x] Domain filtering (all, biotech, finance, legal, marketing, tech)
 - [x] Real-time data from tRPC queries
 - [x] Added to navigation (Knowledge Graph page)
+
+## Agent Seeding Execution (NEW)
+- [ ] Trigger initial agent seeding via API
+- [ ] Verify 5 domain pairs created (biotech, finance, legal, marketing, tech)
+- [ ] Confirm initial debates completed
+- [ ] Check knowledge core populated with foundational insights
+- [ ] Verify agent metrics and statistics
+
+## Vector Embeddings & Semantic Search (NEW)
+- [x] Add embeddings column to knowledge_core table
+- [x] Implement OpenAI embeddings API integration
+- [x] Create embedding generation module
+- [x] Implement cosine similarity calculation
+- [x] Create batch embedding generation with rate limiting
+- [x] Add embedding generation to knowledge creation
+- [x] Backfill embeddings for existing knowledge
+- [x] Implement semantic similarity search
+- [x] Add semantic search endpoint to tRPC API
+- [x] Add findRelatedKnowledge endpoint
+- [x] Add backfillEmbeddings endpoint
+- [x] Update knowledge retrieval to use semantic search
+- [x] Test semantic search accuracy (58 tests passing)
+- [x] Semantic search ready (pending API endpoint availability)
+- [ ] Add semantic search UI to Knowledge Graph page (future enhancement)

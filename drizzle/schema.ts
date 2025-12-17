@@ -163,6 +163,7 @@ export const knowledgeCore = mysqlTable("knowledge_core", {
   sourceDialogueIds: text("source_dialogue_ids"), // JSON array of dialogue IDs
   contributingAgents: text("contributing_agents"), // JSON array of agent IDs
   tags: text("tags"), // JSON array of tags for categorization
+  embedding: text("embedding"), // JSON array of vector embedding for semantic search
   version: int("version").default(1).notNull(), // For knowledge versioning
   supersedes: int("supersedes"), // ID of previous version if updated
   createdAt: timestamp("created_at").defaultNow().notNull(),

@@ -1,0 +1,1 @@
+ALTER TABLE `knowledge_core` ADD `embedding` text;

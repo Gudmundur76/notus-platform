@@ -19,6 +19,11 @@ import {
   triggerJob,
 } from "./scheduled-learning";
 import {
+  semanticSearch,
+  findRelatedKnowledge,
+  backfillEmbeddings,
+} from "./semantic-search";
+import {
   aggregateKnowledgeAcrossDomains,
   getKnowledgeStats,
   runContinuousLearning,
@@ -173,6 +178,51 @@ export const mirrorAgentRouter = router({
   seedAgents: protectedProcedure.mutation(async () => {
     return await seedAgents();
   }),
+
+  // Semantic search
+  semanticSearch: protectedProcedure
+    .input(
+      z.object({
+        query: z.string(),
+        domain: z.string().optional(),
+        topK: z.number().optional(),
+        minSimilarity: z.number().optional(),
+      })
+    )
+    .query(async ({ input }) => {
+      return await semanticSearch(input.query, {
+        domain: input.domain,
+        topK: input.topK,
+        minSimilarity: input.minSimilarity,
+      });
+    }),
+
+  findRelatedKnowledge: protectedProcedure
+    .input(
+      z.object({
+        knowledgeId: z.number(),
+        excludeSameDomain: z.boolean().optional(),
+        topK: z.number().optional(),
+        minSimilarity: z.number().optional(),
+      })
+    )
+    .query(async ({ input }) => {
+      return await findRelatedKnowledge(input.knowledgeId, {
+        excludeSameDomain: input.excludeSameDomain,
+        topK: input.topK,
+        minSimilarity: input.minSimilarity,
+      });
+    }),
+
+  backfillEmbeddings: protectedProcedure
+    .input(
+      z.object({
+        batchSize: z.number().optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      return await backfillEmbeddings(input.batchSize);
+    }),
 
   // Scheduled learning management
   getScheduledJobs: protectedProcedure.query(async () => {
