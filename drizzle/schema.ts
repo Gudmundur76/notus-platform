@@ -237,3 +237,45 @@ export const notifications = mysqlTable("notifications", {
 
 export type Notification = typeof notifications.$inferSelect;
 export type InsertNotification = typeof notifications.$inferInsert;
+/**
+ * Task Feedback Table
+ * Stores user feedback on task results for agent training
+ */
+export const taskFeedback = mysqlTable("task_feedback", {
+  id: int("id").autoincrement().primaryKey(),
+  taskId: int("task_id").notNull(),
+  userId: int("user_id").notNull(),
+  rating: int("rating").notNull(), // 1-5 stars
+  feedbackType: mysqlEnum("feedback_type", ["positive", "negative", "neutral"]).notNull(),
+  feedbackText: text("feedback_text"),
+  improvementSuggestions: text("improvement_suggestions"),
+  wasHelpful: int("was_helpful"), // 1 = yes, 0 = no, null = not answered
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type TaskFeedback = typeof taskFeedback.$inferSelect;
+export type InsertTaskFeedback = typeof taskFeedback.$inferInsert;
+
+/**
+ * Agent Training History Table
+ * Tracks training iterations and performance improvements
+ */
+export const agentTrainingHistory = mysqlTable("agent_training_history", {
+  id: int("id").autoincrement().primaryKey(),
+  agentId: int("agent_id").notNull(),
+  trainingType: mysqlEnum("training_type", ["feedback", "performance", "manual"]).notNull(),
+  feedbackCount: int("feedback_count").default(0).notNull(),
+  positiveCount: int("positive_count").default(0).notNull(),
+  negativeCount: int("negative_count").default(0).notNull(),
+  previousSystemPrompt: text("previous_system_prompt"),
+  updatedSystemPrompt: text("updated_system_prompt"),
+  performanceBeforeTraining: int("performance_before_training"), // Average rating before
+  performanceAfterTraining: int("performance_after_training"), // Average rating after
+  improvementNotes: text("improvement_notes"),
+  status: mysqlEnum("status", ["pending", "applied", "rolled_back"]).default("pending").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  appliedAt: timestamp("applied_at"),
+});
+
+export type AgentTrainingHistory = typeof agentTrainingHistory.$inferSelect;
+export type InsertAgentTrainingHistory = typeof agentTrainingHistory.$inferInsert;

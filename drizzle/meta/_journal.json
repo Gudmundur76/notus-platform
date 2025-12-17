@@ -43,6 +43,13 @@
       "when": 1765990992633,
       "tag": "0005_small_gorilla_man",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1765991702561,
+      "tag": "0006_bent_squadron_supreme",
+      "breakpoints": true
     }
   ]
 }

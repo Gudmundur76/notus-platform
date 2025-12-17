@@ -7,6 +7,7 @@ import { registerOAuthRoutes } from "./oauth";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { initializeScheduledLearning } from "../scheduled-learning";
+import { initializeTrainingScheduler } from "../training-scheduler";
 import { serveStatic, setupVite } from "./vite";
 
 function isPortAvailable(port: number): Promise<boolean> {
@@ -66,6 +67,13 @@ async function startServer() {
       initializeScheduledLearning();
     } catch (error) {
       console.error("Failed to initialize scheduled learning:", error);
+    }
+
+    // Initialize automated training scheduler
+    try {
+      initializeTrainingScheduler();
+    } catch (error) {
+      console.error("Failed to initialize training scheduler:", error);
     }
   });
 }
