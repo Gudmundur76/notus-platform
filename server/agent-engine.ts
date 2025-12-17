@@ -7,6 +7,8 @@ import { invokeLLM } from "./_core/llm";
 import { generateImage } from "./_core/imageGeneration";
 import { storagePut } from "./storage";
 import { nanoid } from "nanoid";
+import { getContextForTask, extractAndStoreMemory } from "./memory";
+import type { Message } from "../drizzle/schema";
 
 export interface AgentTask {
   taskId: string;
@@ -97,7 +99,19 @@ export class ManusAgentEngine {
           break;
       }
 
-      // Step 3: Finalize and return
+      // Step 3: Extract and store memory
+      const userId = task.context?.userId as number | undefined;
+      if (userId) {
+        const taskIdNum = parseInt(task.taskId.replace("task-", "")) || 0;
+        await extractAndStoreMemory(userId, taskIdNum, task.taskType, task.instruction, result);
+        steps.push({
+          thought: "Storing important information to memory",
+          action: "store_memory",
+          observation: "Extracted and stored relevant context for future tasks",
+        });
+      }
+
+      // Step 4: Finalize and return
       steps.push({
         thought: "Task execution completed",
         action: "finalize",
@@ -121,17 +135,46 @@ export class ManusAgentEngine {
   }
 
   /**
-   * Plan task execution using LLM
+   * Plan task execution using LLM with memory context
    */
   private async planTask(task: AgentTask): Promise<string> {
+    // Get relevant context from memory
+    const userId = task.context?.userId as number | undefined;
+    let contextMessages: Array<{ role: "system" | "user" | "assistant"; content: string }> = [];
+    let memoryContext = "";
+
+    if (userId) {
+      const context = await getContextForTask(userId, task.instruction);
+      
+      // Add recent conversation history
+      contextMessages = context.recentMessages.slice(-5).map((msg: Message) => ({
+        role: msg.role as "system" | "user" | "assistant",
+        content: msg.content,
+      }));
+
+      // Add relevant memories as context
+      if (context.relevantMemories.length > 0) {
+        memoryContext = "\n\nRelevant context from memory:\n" +
+          context.relevantMemories
+            .map(m => `- ${m.key}: ${m.value}`)
+            .join("\n");
+      }
+
+      // Add user preferences
+      if (Object.keys(context.preferences).length > 0) {
+        memoryContext += "\n\nUser preferences: " + JSON.stringify(context.preferences);
+      }
+    }
+
     const response = await invokeLLM({
       messages: [
         {
           role: "system",
           content: `You are an AI task planner. Create a concise execution plan for the given task.
 Task type: ${task.taskType}
-Provide a brief, actionable plan in 2-3 sentences.`,
+Provide a brief, actionable plan in 2-3 sentences.${memoryContext}`,
         },
+        ...contextMessages,
         {
           role: "user",
           content: task.instruction,

@@ -15,6 +15,13 @@
       "when": 1765974242257,
       "tag": "0001_faithful_tyrannus",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1765979092727,
+      "tag": "0002_slippery_nico_minoru",
+      "breakpoints": true
     }
   ]
 }

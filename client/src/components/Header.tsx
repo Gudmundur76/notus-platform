@@ -45,6 +45,11 @@ export default function Header() {
                 Pricing
               </span>
             </Link>
+            <Link href="/memory">
+              <span className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
+                Memory
+              </span>
+            </Link>
           </nav>
 
           {/* Auth Buttons */}
@@ -107,6 +112,11 @@ export default function Header() {
               <Link href="/pricing">
                 <span className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
                   Pricing
+                </span>
+              </Link>
+              <Link href="/memory">
+                <span className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
+                  Memory
                 </span>
               </Link>
               <div className="flex flex-col gap-2 pt-2 border-t border-border">
