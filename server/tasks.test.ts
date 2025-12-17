@@ -122,7 +122,7 @@ describe("tasks.list", () => {
     expect(tasks[0]).toHaveProperty("title");
     expect(tasks[0]).toHaveProperty("description");
     expect(tasks[0]).toHaveProperty("status");
-    expect(tasks[0]).toHaveProperty("taskType");
+    expect(tasks[0]).toHaveProperty("type");
   });
 
   it("returns empty array for user with no tasks", async () => {

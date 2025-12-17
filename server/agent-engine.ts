@@ -9,11 +9,12 @@ import { storagePut } from "./storage";
 import { nanoid } from "nanoid";
 import { getContextForTask, extractAndStoreMemory } from "./memory";
 import type { Message } from "../drizzle/schema";
+import { agentSClient } from "./agent-s-client";
 
 export interface AgentTask {
   taskId: string;
   instruction: string;
-  taskType: "general" | "slides" | "website" | "app" | "design";
+  taskType: "general" | "slides" | "website" | "app" | "design" | "computer_control";
   context?: Record<string, any>;
 }
 
@@ -63,6 +64,17 @@ export class ManusAgentEngine {
       let files: Array<{ url: string; type: string; name: string }> = [];
 
       switch (task.taskType) {
+        case "computer_control":
+          const computerResult = await this.executeComputerControl(task, plan);
+          result = computerResult.result;
+          files = computerResult.files || [];
+          steps.push({
+            thought: "Executing GUI automation task",
+            action: "agent_s_control",
+            observation: `Computer control task completed`,
+          });
+          break;
+
         case "design":
         case "slides":
           const imageResult = await this.executeImageGeneration(task, plan);
@@ -263,6 +275,68 @@ Format your response as a JSON object with file paths as keys and code content a
     const result = `Successfully generated ${task.taskType} project:\n\n${plan}\n\nGenerated ${files.length} files. Download them from the links provided.`;
 
     return { result, files };
+  }
+
+  /**
+   * Execute computer control tasks using Agent-S
+   */
+  private async executeComputerControl(
+    task: AgentTask,
+    plan: string
+  ): Promise<{ result: string; files?: Array<{ url: string; type: string; name: string }> }> {
+    try {
+      // Check if Agent-S is available
+      const health = await agentSClient.checkHealth();
+      if (!health.agent_s_available) {
+        return {
+          result: "Agent-S is not available. Computer control tasks require the Agent-S bridge service to be running.",
+        };
+      }
+
+      // Execute task via Agent-S
+      const agentSTask = await agentSClient.executeTask({
+        task_id: task.taskId,
+        description: task.instruction,
+        max_steps: 50,
+        enable_reflection: true,
+      });
+
+      // Wait for completion with progress updates
+      const finalStatus = await agentSClient.waitForCompletion(task.taskId, {
+        pollInterval: 3000,
+        maxWaitTime: 600000, // 10 minutes
+      });
+
+      if (finalStatus.status === "completed") {
+        // Store screenshots as files if available
+        const files: Array<{ url: string; type: string; name: string }> = [];
+        if (finalStatus.screenshot) {
+          const screenshotKey = `${task.taskId}/final-screenshot.png`;
+          const screenshotBuffer = Buffer.from(finalStatus.screenshot, "base64");
+          const storageResult = await storagePut(screenshotKey, screenshotBuffer, "image/png");
+          if (storageResult.url) {
+            files.push({
+              url: storageResult.url,
+              type: "image/png",
+              name: "final-screenshot.png",
+            });
+          }
+        }
+
+        return {
+          result: `Computer control task completed successfully.\n\n${plan}\n\nCompleted ${finalStatus.current_step} steps.\nFinal status: ${finalStatus.message}`,
+          files,
+        };
+      } else {
+        return {
+          result: `Computer control task failed: ${finalStatus.message}`,
+        };
+      }
+    } catch (error) {
+      return {
+        result: `Error executing computer control task: ${error instanceof Error ? error.message : String(error)}`,
+      };
+    }
   }
 
   /**

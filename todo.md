@@ -110,3 +110,41 @@
 - [x] Memory integrated into agent engine
 - [x] Frontend UI complete with Memory page
 - [x] Cross-session persistence working
+
+## Agent-S Integration (NEW - Operational Arm)
+- [x] Research Agent-S capabilities and architecture
+  - [x] GUI automation and computer control
+  - [x] Screen understanding with grounding models
+  - [x] Multi-step task execution
+  - [x] Reflection and self-correction
+- [x] Set up Agent-S Python environment
+  - [x] Install gui-agents package (v0.3.2)
+  - [x] Install tesseract for OCR (v4.1.1)
+  - [x] Set up virtual display server (Xvfb)
+  - [x] Install GUI automation tools (scrot, gnome-screenshot)
+  - [x] Configure display environment (:99)
+  - [ ] Configure API keys (OpenAI, HuggingFace) - optional
+  - [ ] Set up UI-TARS grounding model - optional
+- [x] Create Agent-S bridge service
+  - [x] Python FastAPI service for Agent-S control
+  - [x] REST API endpoints for task execution
+  - [x] WebSocket for real-time status updates
+  - [x] Screenshot and action logging
+  - [x] Health check endpoint
+  - [x] Running on port 8001
+- [x] Integrate with existing task system
+  - [x] Add "computer_control" task type
+  - [x] Route GUI tasks to Agent-S
+  - [x] Combine LLM planning with Agent-S execution
+  - [x] Store Agent-S screenshots in cloud storage
+- [x] Build frontend UI for Agent-S
+  - [x] Computer control accessible through existing dashboard
+  - [x] Task status and results display
+  - [x] Screenshot viewing capability
+  - [x] File download for generated content
+- [x] Testing and validation
+  - [x] Test Agent-S client integration
+  - [x] Test computer control task type
+  - [x] Test display server setup
+  - [x] Integration tests with agent engine
+  - [x] All 46 tests passing

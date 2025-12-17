@@ -147,7 +147,7 @@ export default function Dashboard() {
                           {task.description}
                         </p>
                         <div className="flex items-center gap-2 mt-2">
-                          <Badge variant="outline">{task.taskType}</Badge>
+                          <Badge variant="outline">{task.type}</Badge>
                           <span className="text-xs text-muted-foreground">
                             {new Date(task.createdAt).toLocaleDateString()}
                           </span>
@@ -180,7 +180,7 @@ export default function Dashboard() {
                         </div>
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Type:</span>
-                          <Badge variant="outline">{taskDetail.task?.taskType}</Badge>
+                          <Badge variant="outline">{taskDetail.task?.type}</Badge>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Created:</span>

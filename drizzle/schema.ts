@@ -99,7 +99,7 @@ export const tasks = mysqlTable("tasks", {
   userId: int("userId").notNull(),
   title: varchar("title", { length: 255 }).notNull(),
   description: text("description").notNull(),
-  taskType: mysqlEnum("taskType", ["slides", "website", "app", "design", "general"]).notNull(),
+  type: mysqlEnum("type", ["general", "slides", "website", "app", "design", "computer_control"]).notNull(),
   status: mysqlEnum("status", ["pending", "processing", "completed", "failed"]).default("pending").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),

@@ -103,7 +103,7 @@ export const appRouter = router({
           userId: ctx.user.id,
           title: input.title,
           description: input.description,
-          taskType: input.taskType,
+          type: input.taskType,
           status: "pending",
         });
         
