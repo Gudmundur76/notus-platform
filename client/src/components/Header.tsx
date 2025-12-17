@@ -50,6 +50,11 @@ export default function Header() {
                 Memory
               </span>
             </Link>
+            <Link href="/mirror-agents">
+              <span className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
+                Mirror Agents
+              </span>
+            </Link>
           </nav>
 
           {/* Auth Buttons */}
@@ -117,6 +122,11 @@ export default function Header() {
               <Link href="/memory">
                 <span className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
                   Memory
+                </span>
+              </Link>
+              <Link href="/mirror-agents">
+                <span className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
+                  Mirror Agents
                 </span>
               </Link>
               <div className="flex flex-col gap-2 pt-2 border-t border-border">

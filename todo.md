@@ -148,3 +148,54 @@
   - [x] Test display server setup
   - [x] Integration tests with agent engine
   - [x] All 46 tests passing
+
+## Mirror Agent System (NEW - Self-Learning Architecture)
+- [ ] Design mirror agent architecture
+  - [ ] Agent pairing system (primary + mirror)
+  - [ ] Debate and dialogue protocols
+  - [ ] Research and question-seeking workflows
+  - [ ] Knowledge extraction and refinement
+  - [ ] Scalability design (support thousands/millions of agents)
+
+- [x] Build database schema for agents
+  - [x] Agents table (id, name, domain, type: primary/mirror)
+  - [x] Agent pairs table (primary_id, mirror_id, domain)
+  - [x] Dialogues table (conversation threads between agents)
+  - [x] Dialogue messages table (individual messages)
+  - [x] Knowledge core table (refined insights from all agents)
+  - [x] Agent performance metrics table
+  - [x] Database migration completed
+
+- [x] Implement agent dialogue system
+  - [x] Create agent-to-agent communication protocol
+  - [x] Implement debate mechanism (thesis, antithesis, synthesis)
+  - [x] Build research workflow (question generation, investigation)
+  - [x] Add knowledge extraction from dialogues
+  - [x] Store refined insights in knowledge core
+  - [x] tRPC API endpoints for agent management
+
+- [x] Create central knowledge core
+  - [x] Cross-domain knowledge aggregation
+  - [x] Knowledge indexing and retrieval
+  - [x] Search across all agent knowledge
+  - [x] Knowledge conflict resolution
+  - [x] Continuous learning pipeline
+  - [x] Knowledge versioning and evolution tracking
+  - [x] Knowledge statistics and analytics
+
+- [x] Build frontend UI for mirror agents
+  - [x] Agent management dashboard
+  - [x] Agent creation interface
+  - [x] Run debate and research workflows
+  - [x] Knowledge core browser by domain
+  - [x] Agent performance metrics
+  - [x] Analytics and statistics dashboard
+  - [x] Continuous learning trigger
+
+- [x] Testing and validation
+  - [x] Test agent creation (primary and mirror)
+  - [x] Test knowledge statistics and search
+  - [x] Test cross-domain knowledge aggregation
+  - [x] Test continuous learning pipeline
+  - [x] Integration tests with existing task system
+  - [x] All 55 tests passing (9 mirror agent tests)

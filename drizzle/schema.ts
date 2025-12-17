@@ -92,6 +92,103 @@ export type UserPreference = typeof userPreferences.$inferSelect;
 export type InsertUserPreference = typeof userPreferences.$inferInsert;
 
 /**
+ * Mirror Agent System Tables
+ * Enables agent-to-agent dialogue, debate, and knowledge refinement
+ */
+
+// Agents table - stores both primary and mirror agents
+export const agents = mysqlTable("agents", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  domain: varchar("domain", { length: 255 }).notNull(), // e.g., "biotech", "finance", "legal"
+  type: mysqlEnum("type", ["primary", "mirror"]).notNull(),
+  systemPrompt: text("system_prompt").notNull(), // Agent's core instructions
+  capabilities: text("capabilities"), // JSON array of agent capabilities
+  status: mysqlEnum("status", ["active", "inactive", "training"]).default("active").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Agent = typeof agents.$inferSelect;
+export type InsertAgent = typeof agents.$inferInsert;
+
+// Agent pairs table - links primary agents with their mirrors
+export const agentPairs = mysqlTable("agent_pairs", {
+  id: int("id").autoincrement().primaryKey(),
+  primaryAgentId: int("primary_agent_id").notNull(),
+  mirrorAgentId: int("mirror_agent_id").notNull(),
+  domain: varchar("domain", { length: 255 }).notNull(),
+  pairingStrategy: varchar("pairing_strategy", { length: 100 }), // e.g., "adversarial", "collaborative"
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type AgentPair = typeof agentPairs.$inferSelect;
+export type InsertAgentPair = typeof agentPairs.$inferInsert;
+
+// Dialogues table - stores conversations between agents
+export const dialogues = mysqlTable("dialogues", {
+  id: int("id").autoincrement().primaryKey(),
+  agentPairId: int("agent_pair_id").notNull(),
+  topic: varchar("topic", { length: 500 }).notNull(),
+  type: mysqlEnum("type", ["debate", "research", "question_seeking", "knowledge_refinement"]).notNull(),
+  status: mysqlEnum("status", ["active", "completed", "archived"]).default("active").notNull(),
+  startedAt: timestamp("started_at").defaultNow().notNull(),
+  completedAt: timestamp("completed_at"),
+});
+
+export type Dialogue = typeof dialogues.$inferSelect;
+export type InsertDialogue = typeof dialogues.$inferInsert;
+
+// Dialogue messages table - individual messages in agent conversations
+export const dialogueMessages = mysqlTable("dialogue_messages", {
+  id: int("id").autoincrement().primaryKey(),
+  dialogueId: int("dialogue_id").notNull(),
+  agentId: int("agent_id").notNull(),
+  role: mysqlEnum("role", ["thesis", "antithesis", "synthesis", "question", "answer", "observation"]).notNull(),
+  content: text("content").notNull(),
+  metadata: text("metadata"), // JSON for citations, confidence scores, etc.
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type DialogueMessage = typeof dialogueMessages.$inferSelect;
+export type InsertDialogueMessage = typeof dialogueMessages.$inferInsert;
+
+// Knowledge core table - refined insights from all agent dialogues
+export const knowledgeCore = mysqlTable("knowledge_core", {
+  id: int("id").autoincrement().primaryKey(),
+  domain: varchar("domain", { length: 255 }).notNull(),
+  topic: varchar("topic", { length: 500 }).notNull(),
+  insight: text("insight").notNull(), // The refined knowledge
+  confidence: int("confidence").notNull(), // 0-100 confidence score
+  sourceDialogueIds: text("source_dialogue_ids"), // JSON array of dialogue IDs
+  contributingAgents: text("contributing_agents"), // JSON array of agent IDs
+  tags: text("tags"), // JSON array of tags for categorization
+  version: int("version").default(1).notNull(), // For knowledge versioning
+  supersedes: int("supersedes"), // ID of previous version if updated
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+});
+
+export type KnowledgeCore = typeof knowledgeCore.$inferSelect;
+export type InsertKnowledgeCore = typeof knowledgeCore.$inferInsert;
+
+// Agent performance metrics table
+export const agentMetrics = mysqlTable("agent_metrics", {
+  id: int("id").autoincrement().primaryKey(),
+  agentId: int("agent_id").notNull(),
+  metricDate: timestamp("metric_date").defaultNow().notNull(),
+  dialoguesParticipated: int("dialogues_participated").default(0).notNull(),
+  knowledgeContributions: int("knowledge_contributions").default(0).notNull(),
+  averageConfidence: int("average_confidence").default(0).notNull(), // 0-100
+  debatesWon: int("debates_won").default(0).notNull(),
+  questionsAsked: int("questions_asked").default(0).notNull(),
+  questionsAnswered: int("questions_answered").default(0).notNull(),
+});
+
+export type AgentMetric = typeof agentMetrics.$inferSelect;
+export type InsertAgentMetric = typeof agentMetrics.$inferInsert;
+
+/**
  * Tasks table - storing user task submissions
  */
 export const tasks = mysqlTable("tasks", {
