@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { InsertUser, users, InsertTask, tasks, InsertTaskResult, taskResults, InsertNotification, notifications } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -89,4 +89,73 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+// Task operations
+export async function createTask(task: InsertTask) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(tasks).values(task);
+  return result[0].insertId;
+}
+
+export async function getTaskById(taskId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  
+  const result = await db.select().from(tasks).where(eq(tasks.id, taskId)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function getUserTasks(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return db.select().from(tasks).where(eq(tasks.userId, userId)).orderBy(tasks.createdAt);
+}
+
+export async function updateTaskStatus(taskId: number, status: "pending" | "processing" | "completed" | "failed") {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.update(tasks).set({ status, updatedAt: new Date() }).where(eq(tasks.id, taskId));
+}
+
+// Task result operations
+export async function createTaskResult(result: InsertTaskResult) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const insertResult = await db.insert(taskResults).values(result);
+  return insertResult[0].insertId;
+}
+
+export async function getTaskResult(taskId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  
+  const result = await db.select().from(taskResults).where(eq(taskResults.taskId, taskId)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+// Notification operations
+export async function createNotification(notification: InsertNotification) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(notifications).values(notification);
+  return result[0].insertId;
+}
+
+export async function getUserNotifications(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return db.select().from(notifications).where(eq(notifications.userId, userId)).orderBy(notifications.createdAt);
+}
+
+export async function markNotificationAsRead(notificationId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.update(notifications).set({ isRead: 1 }).where(eq(notifications.id, notificationId));
+}
