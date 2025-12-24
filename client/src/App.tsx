@@ -8,6 +8,15 @@ import NotFound from "./pages/NotFound";
 import MirrorAgents from "./pages/MirrorAgents";
 import TrainingDashboard from "./pages/TrainingDashboard";
 import Dashboard from "./pages/Dashboard";
+import Memory from "./pages/Memory";
+import Features from "./pages/Features";
+import Resources from "./pages/Resources";
+import Events from "./pages/Events";
+import Pricing from "./pages/Pricing";
+import Careers from "./pages/Careers";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import Blog from "./pages/Blog";
+import ApiDocs from "./pages/ApiDocs";
 import { lazy, Suspense } from "react";
 import { Loader2 } from "lucide-react";
 
@@ -23,10 +32,14 @@ function LoadingFallback() {
 }
 
 function Router() {
-  // make sure to consider if you need authentication for certain routes
   return (
     <Switch>
+      {/* Main Pages */}
       <Route path={"/"} component={Home} />
+      <Route path={"/dashboard"} component={Dashboard} />
+      
+      {/* AI Features */}
+      <Route path={"/memory"} component={Memory} />
       <Route path={"/mirror-agents"} component={MirrorAgents} />
       <Route path="/knowledge-graph">
         <Suspense fallback={<LoadingFallback />}>
@@ -34,26 +47,32 @@ function Router() {
         </Suspense>
       </Route>
       <Route path="/training" component={TrainingDashboard} />
-      <Route path={"/dashboard"} component={Dashboard} />
+      
+      {/* Marketing Pages */}
+      <Route path="/features" component={Features} />
+      <Route path="/resources" component={Resources} />
+      <Route path="/events" component={Events} />
+      <Route path="/pricing" component={Pricing} />
+      <Route path="/careers" component={Careers} />
+      <Route path="/blog" component={Blog} />
+      
+      {/* Documentation */}
+      <Route path="/api-docs" component={ApiDocs} />
+      
+      {/* Legal */}
+      <Route path="/privacy" component={PrivacyPolicy} />
+      
+      {/* Error Pages */}
       <Route path={"/404"} component={NotFound} />
-      {/* Final fallback route */}
       <Route component={NotFound} />
     </Switch>
   );
 }
 
-// NOTE: About Theme
-// - First choose a default theme according to your design style (dark or light bg), than change color palette in index.css
-//   to keep consistent foreground/background color across components
-// - If you want to make theme switchable, pass `switchable` ThemeProvider and use `useTheme` hook
-
 function App() {
   return (
     <ErrorBoundary>
-      <ThemeProvider
-        defaultTheme="light"
-        // switchable
-      >
+      <ThemeProvider defaultTheme="light">
         <TooltipProvider>
           <Toaster />
           <Router />

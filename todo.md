@@ -353,3 +353,17 @@
 - [x] User authentication working via Manus OAuth
 - [x] Scheduled learning jobs initialized and running
 - [x] Agent seeding process active
+
+
+## Missing Subpages (December 24, 2025)
+- [x] Features page - showcase platform capabilities
+- [x] Resources page - documentation and guides
+- [x] Events page - upcoming events and webinars
+- [x] Pricing page - pricing tiers and plans
+- [x] Careers page - job listings
+- [x] Privacy Policy page - legal information
+- [x] Blog page - articles and updates
+- [x] API Docs page - API documentation
+- [x] Memory page route (already exists but needs routing)
+- [x] Update App.tsx with all new routes
+- [x] Update Footer navigation links
