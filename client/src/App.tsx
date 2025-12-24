@@ -6,9 +6,21 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 import NotFound from "./pages/NotFound";
 import MirrorAgents from "./pages/MirrorAgents";
-import KnowledgeGraph from "./pages/KnowledgeGraph";
 import TrainingDashboard from "./pages/TrainingDashboard";
 import Dashboard from "./pages/Dashboard";
+import { lazy, Suspense } from "react";
+import { Loader2 } from "lucide-react";
+
+// Lazy load KnowledgeGraph to avoid AFRAME dependency issue on initial load
+const KnowledgeGraph = lazy(() => import("./pages/KnowledgeGraph"));
+
+function LoadingFallback() {
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+    </div>
+  );
+}
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -16,7 +28,11 @@ function Router() {
     <Switch>
       <Route path={"/"} component={Home} />
       <Route path={"/mirror-agents"} component={MirrorAgents} />
-        <Route path="/knowledge-graph" component={KnowledgeGraph} />
+      <Route path="/knowledge-graph">
+        <Suspense fallback={<LoadingFallback />}>
+          <KnowledgeGraph />
+        </Suspense>
+      </Route>
       <Route path="/training" component={TrainingDashboard} />
       <Route path={"/dashboard"} component={Dashboard} />
       <Route path={"/404"} component={NotFound} />
