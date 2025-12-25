@@ -367,3 +367,30 @@
 - [x] Memory page route (already exists but needs routing)
 - [x] Update App.tsx with all new routes
 - [x] Update Footer navigation links
+
+
+## Blog Article Detail Pages (December 24, 2025)
+- [ ] Create blog article data structure with slug, title, content, author, date
+- [ ] Create sample articles with full content
+- [ ] Create BlogArticle detail page component with markdown rendering
+- [ ] Add route for /blog/:slug pattern
+- [ ] Update Blog page to link articles to detail pages
+- [ ] Add social sharing buttons
+- [ ] Add related articles section
+- [ ] Test shareable URLs work correctly
+
+## Blog Article Detail Pages (NEW - Completed)
+- [x] Create blog article data structure with full content
+- [x] Create 7 unique blog articles with rich markdown content
+- [x] Implement BlogArticle detail page component
+- [x] Add slug-based routing (/blog/:slug)
+- [x] Implement breadcrumb navigation
+- [x] Add share buttons (Twitter, LinkedIn, copy link)
+- [x] Display author info with avatar and bio
+- [x] Show related articles section
+- [x] Add category badges with color coding
+- [x] Implement article not found handling
+- [x] Update Blog page to link to article details
+- [x] Add category filtering on Blog page
+- [x] Test direct URL access (shareable URLs)
+- [x] Test navigation between articles

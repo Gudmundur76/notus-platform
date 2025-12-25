@@ -1,74 +1,32 @@
+import { useState } from "react";
+import { Link } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Calendar, Clock, User, ArrowRight } from "lucide-react";
-
-const featuredPost = {
-  title: "Introducing Notus AI: A Quality-First Approach to Autonomous Agents",
-  description: "Today we're excited to announce the launch of Notus AI, a platform built from the ground up with quality as the primary focus. Learn about our vision, architecture, and what makes us different.",
-  author: "Gudmundur Kristjansson",
-  date: "December 24, 2024",
-  readTime: "8 min read",
-  category: "Announcement",
-  image: "/api/placeholder/800/400",
-};
-
-const posts = [
-  {
-    title: "Understanding Mirror Agents: How AI Debates Lead to Better Knowledge",
-    description: "Deep dive into our mirror agent architecture and how thesis-antithesis-synthesis leads to refined, high-quality knowledge extraction.",
-    author: "AI Research Team",
-    date: "December 20, 2024",
-    readTime: "12 min read",
-    category: "Technical",
-  },
-  {
-    title: "Building a Memory System for AI Agents",
-    description: "How we implemented cross-session memory persistence that allows agents to learn and remember context across interactions.",
-    author: "Engineering Team",
-    date: "December 15, 2024",
-    readTime: "10 min read",
-    category: "Engineering",
-  },
-  {
-    title: "The Case for Quality-First AI Development",
-    description: "Why we chose to prioritize quality over growth, and how this decision shapes every aspect of our platform.",
-    author: "Gudmundur Kristjansson",
-    date: "December 10, 2024",
-    readTime: "6 min read",
-    category: "Vision",
-  },
-  {
-    title: "Deploying AI Agents on RunPod: A Complete Guide",
-    description: "Step-by-step tutorial on deploying Notus agents on RunPod for GPU-accelerated inference and processing.",
-    author: "DevOps Team",
-    date: "December 5, 2024",
-    readTime: "15 min read",
-    category: "Tutorial",
-  },
-  {
-    title: "Knowledge Graphs for AI: Connecting the Dots",
-    description: "How we use knowledge graphs to visualize and navigate the connections between concepts learned by our agents.",
-    author: "AI Research Team",
-    date: "December 1, 2024",
-    readTime: "9 min read",
-    category: "Technical",
-  },
-  {
-    title: "Mobile Next Integration: Automated Testing for Mobile Apps",
-    description: "Introducing our Mobile Next integration for automated mobile testing with AI-powered quality assurance.",
-    author: "Mobile Team",
-    date: "November 28, 2024",
-    readTime: "7 min read",
-    category: "Product",
-  },
-];
+import { blogArticles, getFeaturedArticle, BlogArticle } from "@/data/blogArticles";
 
 const categories = ["All", "Announcement", "Technical", "Engineering", "Tutorial", "Vision", "Product"];
 
+const categoryColors: Record<string, string> = {
+  'Announcement': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+  'Technical': 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
+  'Engineering': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+  'Tutorial': 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
+  'Vision': 'bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200',
+  'Product': 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200',
+};
+
 export default function Blog() {
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const featuredPost = getFeaturedArticle();
+  
+  const filteredPosts = selectedCategory === "All" 
+    ? blogArticles.filter(post => !post.featured)
+    : blogArticles.filter(post => post.category === selectedCategory && !post.featured);
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
@@ -98,8 +56,9 @@ export default function Blog() {
               {categories.map((category) => (
                 <Button
                   key={category}
-                  variant={category === "All" ? "default" : "outline"}
+                  variant={category === selectedCategory ? "default" : "outline"}
                   size="sm"
+                  onClick={() => setSelectedCategory(category)}
                 >
                   {category}
                 </Button>
@@ -109,75 +68,89 @@ export default function Blog() {
         </section>
 
         {/* Featured Post */}
-        <section className="py-12 px-4">
-          <div className="container max-w-6xl mx-auto">
-            <Card className="overflow-hidden hover:shadow-lg transition-shadow">
-              <div className="md:flex">
-                <div className="md:w-2/5 bg-gradient-to-br from-primary/20 to-primary/5 p-8 flex items-center justify-center">
-                  <div className="text-6xl">🚀</div>
-                </div>
-                <div className="md:w-3/5 p-6">
-                  <Badge className="mb-4">{featuredPost.category}</Badge>
-                  <CardTitle className="text-2xl mb-4">{featuredPost.title}</CardTitle>
-                  <CardDescription className="text-base mb-6">
-                    {featuredPost.description}
-                  </CardDescription>
-                  <div className="flex flex-wrap gap-4 text-sm text-muted-foreground mb-6">
-                    <div className="flex items-center gap-1">
-                      <User className="h-4 w-4" />
-                      <span>{featuredPost.author}</span>
+        {featuredPost && selectedCategory === "All" && (
+          <section className="py-12 px-4">
+            <div className="container max-w-6xl mx-auto">
+              <Link href={`/blog/${featuredPost.slug}`}>
+                <Card className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer">
+                  <div className="md:flex">
+                    <div className="md:w-2/5 bg-gradient-to-br from-primary/20 to-primary/5 p-8 flex items-center justify-center">
+                      <div className="text-6xl">🚀</div>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <Calendar className="h-4 w-4" />
-                      <span>{featuredPost.date}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Clock className="h-4 w-4" />
-                      <span>{featuredPost.readTime}</span>
+                    <div className="md:w-3/5 p-6">
+                      <Badge className={categoryColors[featuredPost.category] || ''}>
+                        {featuredPost.category}
+                      </Badge>
+                      <CardTitle className="text-2xl mb-4 mt-4">{featuredPost.title}</CardTitle>
+                      <CardDescription className="text-base mb-6">
+                        {featuredPost.excerpt}
+                      </CardDescription>
+                      <div className="flex flex-wrap gap-4 text-sm text-muted-foreground mb-6">
+                        <div className="flex items-center gap-1">
+                          <User className="h-4 w-4" />
+                          <span>{featuredPost.author.name}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Calendar className="h-4 w-4" />
+                          <span>{featuredPost.date}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Clock className="h-4 w-4" />
+                          <span>{featuredPost.readTime}</span>
+                        </div>
+                      </div>
+                      <Button>
+                        Read Article <ArrowRight className="ml-2 h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
-                  <Button>
-                    Read Article <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          </div>
-        </section>
+                </Card>
+              </Link>
+            </div>
+          </section>
+        )}
 
         {/* Blog Posts Grid */}
         <section className="py-12 px-4">
           <div className="container max-w-6xl mx-auto">
-            <h2 className="text-2xl font-bold mb-8">Latest Posts</h2>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {posts.map((post) => (
-                <Card key={post.title} className="hover:shadow-lg transition-shadow cursor-pointer">
-                  <CardHeader>
-                    <div className="flex items-center justify-between mb-2">
-                      <Badge variant="outline">{post.category}</Badge>
-                      <span className="text-xs text-muted-foreground">{post.readTime}</span>
-                    </div>
-                    <CardTitle className="text-lg line-clamp-2">{post.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <CardDescription className="line-clamp-3 mb-4">
-                      {post.description}
-                    </CardDescription>
-                    <div className="flex items-center justify-between text-sm text-muted-foreground">
-                      <span>{post.author}</span>
-                      <span>{post.date}</span>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Load More */}
-        <section className="py-8 px-4">
-          <div className="container max-w-6xl mx-auto text-center">
-            <Button variant="outline" size="lg">Load More Posts</Button>
+            <h2 className="text-2xl font-bold mb-8">
+              {selectedCategory === "All" ? "Latest Posts" : `${selectedCategory} Posts`}
+            </h2>
+            {filteredPosts.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground">
+                <p>No posts found in this category.</p>
+              </div>
+            ) : (
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredPosts.map((post) => (
+                  <Link key={post.slug} href={`/blog/${post.slug}`}>
+                    <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer">
+                      <CardHeader>
+                        <div className="flex items-center justify-between mb-2">
+                          <Badge 
+                            variant="outline" 
+                            className={categoryColors[post.category] || ''}
+                          >
+                            {post.category}
+                          </Badge>
+                          <span className="text-xs text-muted-foreground">{post.readTime}</span>
+                        </div>
+                        <CardTitle className="text-lg line-clamp-2">{post.title}</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <CardDescription className="line-clamp-3 mb-4">
+                          {post.excerpt}
+                        </CardDescription>
+                        <div className="flex items-center justify-between text-sm text-muted-foreground">
+                          <span>{post.author.name}</span>
+                          <span>{post.date}</span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
         </section>
 
@@ -192,7 +165,7 @@ export default function Blog() {
               <input
                 type="email"
                 placeholder="Enter your email"
-                className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background"
               />
               <Button>Subscribe</Button>
             </div>

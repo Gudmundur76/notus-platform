@@ -16,6 +16,7 @@ import Pricing from "./pages/Pricing";
 import Careers from "./pages/Careers";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Blog from "./pages/Blog";
+import BlogArticle from "./pages/BlogArticle";
 import ApiDocs from "./pages/ApiDocs";
 import { lazy, Suspense } from "react";
 import { Loader2 } from "lucide-react";
@@ -55,6 +56,7 @@ function Router() {
       <Route path="/pricing" component={Pricing} />
       <Route path="/careers" component={Careers} />
       <Route path="/blog" component={Blog} />
+      <Route path="/blog/:slug" component={BlogArticle} />
       
       {/* Documentation */}
       <Route path="/api-docs" component={ApiDocs} />
