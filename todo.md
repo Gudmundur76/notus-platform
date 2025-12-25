@@ -394,3 +394,87 @@
 - [x] Add category filtering on Blog page
 - [x] Test direct URL access (shareable URLs)
 - [x] Test navigation between articles
+
+## Platform Enhancements - Addressing Manus.im Limitations (NEW)
+
+### Real-Time Monitoring Dashboard
+- [ ] Create WebSocket server for real-time updates
+- [ ] Build live task status streaming
+- [ ] Implement real-time metrics dashboard (CPU, memory, active tasks)
+- [ ] Add live log viewer with filtering
+- [ ] Create notification system for task completion/errors
+- [ ] Build agent activity monitor (which agents are running)
+- [ ] Add scheduled job status panel with live updates
+
+### Session Continuity & Context Handoff
+- [ ] Create session state serialization system
+- [ ] Build automatic context summary generation
+- [ ] Implement session snapshot/restore functionality
+- [ ] Create "handoff document" generator for multi-session projects
+- [ ] Build project state persistence (beyond checkpoints)
+- [ ] Add conversation history export/import
+- [ ] Create resumable task queue for long-running operations
+
+### Secure Credentials Vault
+- [ ] Design encrypted credentials storage schema
+- [ ] Implement AES-256 encryption for secrets at rest
+- [ ] Build credentials management UI (add/edit/delete)
+- [ ] Create credential categories (API keys, OAuth tokens, DB connections)
+- [ ] Implement credential rotation reminders
+- [ ] Add audit logging for credential access
+- [ ] Build secure credential injection into tasks
+- [ ] Create credential sharing between projects (optional)
+
+### Enhanced Memory System
+- [ ] Implement vector embeddings for all memories
+- [ ] Build semantic search across all memory types
+- [ ] Create automatic context injection based on task relevance
+- [ ] Implement memory importance scoring
+- [ ] Add memory consolidation (merge similar memories)
+- [ ] Build memory timeline visualization
+- [ ] Create memory export/backup functionality
+
+### Deployment Manager
+- [ ] Build deployment configuration generator
+- [ ] Create one-click export for common platforms (Vercel, Railway, Render)
+- [ ] Implement Docker image builder
+- [ ] Add environment variable management for deployments
+- [ ] Create deployment status tracking
+- [ ] Build rollback functionality for deployments
+- [ ] Add custom domain configuration helper
+
+
+## Platform Enhancements - Addressing Manus.im Limitations (December 25, 2025)
+
+### Real-Time Monitoring
+- [x] Create monitoring database tables (monitoringEvents, monitoringMetrics)
+- [x] Build monitoring module with event logging and metrics
+- [x] Create MonitoringDashboard.tsx with live status cards
+- [x] Add event stream with filtering by type (tasks, agents, errors)
+- [x] Display active tasks, completed/failed today, active agents
+
+### Session Continuity & Handoff
+- [x] Create session database tables (sessionStates, sessionHandoffs)
+- [x] Build sessionContinuity module with save/restore/export
+- [x] Create SessionManager.tsx with sessions and handoff tabs
+- [x] Implement session export to JSON
+- [x] Add handoff document creation for session transitions
+
+### Credentials Vault
+- [x] Create credentials database tables with encrypted storage
+- [x] Build credentialsVault module with AES-256-GCM encryption
+- [x] Create CredentialsVault.tsx with category tabs
+- [x] Implement credential rotation and expiry tracking
+- [x] Add access logging for audit purposes
+
+### Deployment Manager
+- [x] Create deployment database tables
+- [x] Build deploymentManager module with config generators
+- [x] Create DeploymentManager.tsx with platform selection
+- [x] Generate configs for Vercel, Railway, Docker
+- [x] Support AWS, GCP, Render platforms
+- [x] Add copy and download functionality
+
+### Platform Enhancement Tests
+- [x] Create platform.test.ts with 15 tests
+- [x] All platform tests passing

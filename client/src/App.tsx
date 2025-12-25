@@ -18,6 +18,10 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Blog from "./pages/Blog";
 import BlogArticle from "./pages/BlogArticle";
 import ApiDocs from "./pages/ApiDocs";
+import MonitoringDashboard from "./pages/MonitoringDashboard";
+import SessionManager from "./pages/SessionManager";
+import CredentialsVault from "./pages/CredentialsVault";
+import DeploymentManager from "./pages/DeploymentManager";
 import { lazy, Suspense } from "react";
 import { Loader2 } from "lucide-react";
 
@@ -48,6 +52,12 @@ function Router() {
         </Suspense>
       </Route>
       <Route path="/training" component={TrainingDashboard} />
+      
+      {/* Platform Tools */}
+      <Route path="/monitoring" component={MonitoringDashboard} />
+      <Route path="/sessions" component={SessionManager} />
+      <Route path="/credentials" component={CredentialsVault} />
+      <Route path="/deployments" component={DeploymentManager} />
       
       {/* Marketing Pages */}
       <Route path="/features" component={Features} />

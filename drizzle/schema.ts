@@ -279,3 +279,166 @@ export const agentTrainingHistory = mysqlTable("agent_training_history", {
 
 export type AgentTrainingHistory = typeof agentTrainingHistory.$inferSelect;
 export type InsertAgentTrainingHistory = typeof agentTrainingHistory.$inferInsert;
+
+
+/**
+ * ============================================
+ * PLATFORM ENHANCEMENT TABLES
+ * Addressing Manus.im Limitations
+ * ============================================
+ */
+
+/**
+ * Session States Table
+ * Stores serialized session state for continuity across sessions
+ */
+export const sessionStates = mysqlTable("session_states", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("user_id").notNull(),
+  sessionId: varchar("session_id", { length: 64 }).notNull().unique(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  state: text("state").notNull(), // JSON serialized state
+  contextSummary: text("context_summary"), // AI-generated summary for handoff
+  activeTaskIds: text("active_task_ids"), // JSON array of task IDs
+  memorySnapshot: text("memory_snapshot"), // JSON snapshot of relevant memories
+  metadata: text("metadata"), // Additional metadata
+  isActive: int("is_active").default(1).notNull(),
+  expiresAt: timestamp("expires_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+});
+
+export type SessionState = typeof sessionStates.$inferSelect;
+export type InsertSessionState = typeof sessionStates.$inferInsert;
+
+/**
+ * Credentials Vault Table
+ * Encrypted storage for API keys, tokens, and other secrets
+ */
+export const credentialsVault = mysqlTable("credentials_vault", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("user_id").notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
+  category: mysqlEnum("category", ["api_key", "oauth_token", "database", "service", "other"]).notNull(),
+  encryptedValue: text("encrypted_value").notNull(), // AES-256 encrypted
+  encryptionIv: varchar("encryption_iv", { length: 32 }).notNull(), // Initialization vector
+  description: text("description"),
+  serviceUrl: varchar("service_url", { length: 500 }),
+  lastUsedAt: timestamp("last_used_at"),
+  expiresAt: timestamp("expires_at"),
+  rotationReminder: int("rotation_reminder").default(90), // Days until reminder
+  isActive: int("is_active").default(1).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+});
+
+export type CredentialVault = typeof credentialsVault.$inferSelect;
+export type InsertCredentialVault = typeof credentialsVault.$inferInsert;
+
+/**
+ * Credential Access Logs Table
+ * Audit trail for credential usage
+ */
+export const credentialAccessLogs = mysqlTable("credential_access_logs", {
+  id: int("id").autoincrement().primaryKey(),
+  credentialId: int("credential_id").notNull(),
+  userId: int("user_id").notNull(),
+  action: mysqlEnum("action", ["view", "use", "update", "delete", "rotate"]).notNull(),
+  taskId: int("task_id"), // If used in a task
+  ipAddress: varchar("ip_address", { length: 45 }),
+  userAgent: text("user_agent"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type CredentialAccessLog = typeof credentialAccessLogs.$inferSelect;
+export type InsertCredentialAccessLog = typeof credentialAccessLogs.$inferInsert;
+
+/**
+ * Real-Time Monitoring Events Table
+ * Stores system events for monitoring dashboard
+ */
+export const monitoringEvents = mysqlTable("monitoring_events", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("user_id"),
+  eventType: mysqlEnum("event_type", [
+    "task_started", "task_completed", "task_failed",
+    "agent_started", "agent_completed", "agent_error",
+    "memory_access", "credential_access",
+    "session_created", "session_restored",
+    "system_health", "error"
+  ]).notNull(),
+  severity: mysqlEnum("severity", ["info", "warning", "error", "critical"]).default("info").notNull(),
+  source: varchar("source", { length: 100 }).notNull(), // e.g., "agent-engine", "task-processor"
+  message: text("message").notNull(),
+  metadata: text("metadata"), // JSON additional data
+  taskId: int("task_id"),
+  agentId: int("agent_id"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type MonitoringEvent = typeof monitoringEvents.$inferSelect;
+export type InsertMonitoringEvent = typeof monitoringEvents.$inferInsert;
+
+/**
+ * System Metrics Table
+ * Stores periodic system health metrics
+ */
+export const systemMetrics = mysqlTable("system_metrics", {
+  id: int("id").autoincrement().primaryKey(),
+  metricType: mysqlEnum("metric_type", [
+    "active_tasks", "completed_tasks", "failed_tasks",
+    "active_agents", "memory_usage", "api_calls",
+    "response_time", "error_rate"
+  ]).notNull(),
+  value: int("value").notNull(),
+  unit: varchar("unit", { length: 50 }), // e.g., "count", "ms", "percent"
+  metadata: text("metadata"),
+  recordedAt: timestamp("recorded_at").defaultNow().notNull(),
+});
+
+export type SystemMetric = typeof systemMetrics.$inferSelect;
+export type InsertSystemMetric = typeof systemMetrics.$inferInsert;
+
+/**
+ * Deployment Configurations Table
+ * Stores deployment settings for external platforms
+ */
+export const deploymentConfigs = mysqlTable("deployment_configs", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("user_id").notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
+  platform: mysqlEnum("platform", ["vercel", "railway", "render", "docker", "aws", "gcp", "custom"]).notNull(),
+  config: text("config").notNull(), // JSON configuration
+  envVars: text("env_vars"), // JSON encrypted environment variables
+  status: mysqlEnum("status", ["draft", "ready", "deployed", "failed"]).default("draft").notNull(),
+  lastDeployedAt: timestamp("last_deployed_at"),
+  deploymentUrl: varchar("deployment_url", { length: 500 }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+});
+
+export type DeploymentConfig = typeof deploymentConfigs.$inferSelect;
+export type InsertDeploymentConfig = typeof deploymentConfigs.$inferInsert;
+
+/**
+ * Handoff Documents Table
+ * Stores generated context handoff documents for multi-session projects
+ */
+export const handoffDocuments = mysqlTable("handoff_documents", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("user_id").notNull(),
+  sessionStateId: int("session_state_id"),
+  title: varchar("title", { length: 255 }).notNull(),
+  projectOverview: text("project_overview").notNull(),
+  currentProgress: text("current_progress").notNull(),
+  nextSteps: text("next_steps").notNull(),
+  keyDecisions: text("key_decisions"), // JSON array of important decisions made
+  blockers: text("blockers"), // JSON array of current blockers
+  relevantFiles: text("relevant_files"), // JSON array of file paths
+  contextForNextSession: text("context_for_next_session").notNull(),
+  generatedAt: timestamp("generated_at").defaultNow().notNull(),
+});
+
+export type HandoffDocument = typeof handoffDocuments.$inferSelect;
+export type InsertHandoffDocument = typeof handoffDocuments.$inferInsert;

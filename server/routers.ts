@@ -4,6 +4,7 @@ import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { mirrorAgentRouter } from "./mirrorAgentRouter";
 import { feedbackRouter } from "./feedbackRouter";
+import { platformRouter } from "./platformRouter";
 import { memoryRouter } from "./memoryRouter";
 import { z } from "zod";
 import { createTask, getUserTasks, getTaskById, getTaskResult, updateTaskStatus, createTaskResult, getUserNotifications, markNotificationAsRead, createNotification } from "./db";
@@ -82,6 +83,7 @@ export const appRouter = router({
   system: systemRouter,
   mirrorAgents: mirrorAgentRouter,
   feedback: feedbackRouter,
+  platform: platformRouter,
   memory: memoryRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
