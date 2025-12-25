@@ -442,3 +442,135 @@ export const handoffDocuments = mysqlTable("handoff_documents", {
 
 export type HandoffDocument = typeof handoffDocuments.$inferSelect;
 export type InsertHandoffDocument = typeof handoffDocuments.$inferInsert;
+
+
+/**
+ * ============================================
+ * SKILLS SYSTEM TABLES
+ * Customizable AI workflows and capabilities
+ * ============================================
+ */
+
+/**
+ * Skills Table
+ * Stores skill definitions with instructions and metadata
+ */
+export const skills = mysqlTable("skills", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  slug: varchar("slug", { length: 255 }).notNull().unique(),
+  description: text("description").notNull(),
+  category: mysqlEnum("category", [
+    "development",
+    "data_analysis",
+    "business",
+    "communication",
+    "creative",
+    "productivity",
+    "security",
+    "other"
+  ]).notNull(),
+  content: text("content").notNull(), // The SKILL.md content
+  whenToUse: text("when_to_use"), // Use cases
+  instructions: text("instructions"), // Detailed instructions
+  examples: text("examples"), // JSON array of examples
+  isPublic: int("is_public").default(0).notNull(),
+  isBuiltIn: int("is_built_in").default(0).notNull(),
+  createdBy: int("created_by"), // User ID, null for built-in
+  version: varchar("version", { length: 20 }).default("1.0.0").notNull(),
+  rating: int("rating").default(0).notNull(), // Average rating 0-5 (stored as 0-50 for precision)
+  ratingCount: int("rating_count").default(0).notNull(),
+  installCount: int("install_count").default(0).notNull(),
+  tags: text("tags"), // JSON array of tags
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Skill = typeof skills.$inferSelect;
+export type InsertSkill = typeof skills.$inferInsert;
+
+/**
+ * Skill Scripts Table
+ * Helper scripts associated with skills
+ */
+export const skillScripts = mysqlTable("skill_scripts", {
+  id: int("id").autoincrement().primaryKey(),
+  skillId: int("skill_id").notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
+  language: mysqlEnum("language", ["python", "typescript", "javascript", "bash", "other"]).notNull(),
+  content: text("content").notNull(),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type SkillScript = typeof skillScripts.$inferSelect;
+export type InsertSkillScript = typeof skillScripts.$inferInsert;
+
+/**
+ * Skill Templates Table
+ * Document templates associated with skills
+ */
+export const skillTemplates = mysqlTable("skill_templates", {
+  id: int("id").autoincrement().primaryKey(),
+  skillId: int("skill_id").notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
+  content: text("content").notNull(),
+  format: mysqlEnum("format", ["markdown", "json", "yaml", "text", "other"]).default("markdown").notNull(),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type SkillTemplate = typeof skillTemplates.$inferSelect;
+export type InsertSkillTemplate = typeof skillTemplates.$inferInsert;
+
+/**
+ * User Skills Table
+ * Tracks which skills users have installed
+ */
+export const userSkills = mysqlTable("user_skills", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("user_id").notNull(),
+  skillId: int("skill_id").notNull(),
+  isEnabled: int("is_enabled").default(1).notNull(),
+  customConfig: text("custom_config"), // JSON user-specific configuration
+  installedAt: timestamp("installed_at").defaultNow().notNull(),
+});
+
+export type UserSkill = typeof userSkills.$inferSelect;
+export type InsertUserSkill = typeof userSkills.$inferInsert;
+
+/**
+ * Skill Usage Table
+ * Tracks skill usage for analytics and improvement
+ */
+export const skillUsage = mysqlTable("skill_usage", {
+  id: int("id").autoincrement().primaryKey(),
+  skillId: int("skill_id").notNull(),
+  userId: int("user_id").notNull(),
+  taskId: int("task_id"),
+  success: int("success").default(1).notNull(), // 1 = success, 0 = failure
+  executionTime: int("execution_time"), // milliseconds
+  feedback: text("feedback"),
+  usedAt: timestamp("used_at").defaultNow().notNull(),
+});
+
+export type SkillUsage = typeof skillUsage.$inferSelect;
+export type InsertSkillUsage = typeof skillUsage.$inferInsert;
+
+/**
+ * Skill Reviews Table
+ * User reviews and ratings for skills
+ */
+export const skillReviews = mysqlTable("skill_reviews", {
+  id: int("id").autoincrement().primaryKey(),
+  skillId: int("skill_id").notNull(),
+  userId: int("user_id").notNull(),
+  rating: int("rating").notNull(), // 1-5
+  review: text("review"),
+  isHelpful: int("is_helpful").default(0).notNull(), // Count of helpful votes
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+});
+
+export type SkillReview = typeof skillReviews.$inferSelect;
+export type InsertSkillReview = typeof skillReviews.$inferInsert;

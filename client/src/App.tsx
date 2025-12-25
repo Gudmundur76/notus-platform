@@ -22,6 +22,10 @@ import MonitoringDashboard from "./pages/MonitoringDashboard";
 import SessionManager from "./pages/SessionManager";
 import CredentialsVault from "./pages/CredentialsVault";
 import DeploymentManager from "./pages/DeploymentManager";
+import SkillsMarketplace from "./pages/SkillsMarketplace";
+import SkillDetail from "./pages/SkillDetail";
+import MySkills from "./pages/MySkills";
+import CreateSkill from "./pages/CreateSkill";
 import { lazy, Suspense } from "react";
 import { Loader2 } from "lucide-react";
 
@@ -58,6 +62,12 @@ function Router() {
       <Route path="/sessions" component={SessionManager} />
       <Route path="/credentials" component={CredentialsVault} />
       <Route path="/deployments" component={DeploymentManager} />
+      
+      {/* Skills System */}
+      <Route path="/skills" component={SkillsMarketplace} />
+      <Route path="/skills/my" component={MySkills} />
+      <Route path="/skills/create" component={CreateSkill} />
+      <Route path="/skills/:slug" component={SkillDetail} />
       
       {/* Marketing Pages */}
       <Route path="/features" component={Features} />

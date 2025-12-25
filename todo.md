@@ -478,3 +478,70 @@
 ### Platform Enhancement Tests
 - [x] Create platform.test.ts with 15 tests
 - [x] All platform tests passing
+
+
+## Skills System - Major Feature Addition (December 25, 2025)
+
+### Database Schema
+- [x] Create skills table (id, name, slug, description, category, content, isPublic, isBuiltIn, createdBy)
+- [x] Create skillScripts table (skillId, name, language, content)
+- [x] Create skillTemplates table (skillId, name, content)
+- [x] Create skillUsage table (skillId, userId, taskId, timestamp, success)
+- [x] Create userSkills table (userId, skillId, installedAt)
+- [x] Create skillReviews table (skillId, userId, rating, review)
+- [x] Push database migrations
+
+### API Endpoints
+- [x] Create skills router with CRUD operations
+- [x] Build skills loader module for injecting into agent prompts
+- [x] Add skill search and filtering endpoints
+- [x] Add skill installation/uninstallation endpoints
+- [x] Add skill usage tracking endpoints
+- [x] Add skill rating and review endpoints
+
+### Built-in Skills Import (13 Skills Total)
+- [x] Import MCP Builder skill
+- [x] Import artifacts-builder skill
+- [x] Import webapp-testing skill
+- [x] Import subagent-driven-development skill
+- [x] Import test-driven-development skill
+- [x] Import prompt-engineering skill
+- [x] Import software-architecture skill
+- [x] Import lead-research-assistant skill
+- [x] Import content-research-writer skill
+- [x] Import file-organizer skill
+- [x] Import meeting-insights-analyzer skill
+- [x] Import data-pipeline-builder skill
+- [x] Import security-auditor skill
+- [x] Seed built-in skills to database
+
+### Skills Browser UI
+- [x] Create SkillsMarketplace.tsx page
+- [x] Build skill cards with preview
+- [x] Add category filtering and search
+- [x] Create SkillDetail.tsx page with full info
+- [x] Add install/uninstall buttons
+- [x] Show usage stats and ratings
+- [x] Create MySkills.tsx for installed skills management
+
+### Skills Creator UI
+- [x] Create CreateSkill.tsx page
+- [x] Build form with all skill fields
+- [x] Add category selection dropdown
+- [x] Add scripts and templates management
+- [x] Add examples and tags input
+- [x] Add public/private toggle
+
+### Agent Integration
+- [x] Create loadSkillsForAgent function
+- [x] Create getSkillsForTaskType function
+- [x] Create suggestSkillsForTask function
+- [x] Track skill usage per task
+
+### Tests
+- [x] Write skills.test.ts with 20 comprehensive tests
+- [x] Test skill CRUD operations
+- [x] Test skill scripts and templates
+- [x] Test user skill installation/uninstallation
+- [x] Test skill loading for agent prompts
+- [x] All 20 skills tests passing
