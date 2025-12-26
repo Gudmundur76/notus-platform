@@ -12,6 +12,8 @@ import {
   userSkills,
   skillUsage,
   skillReviews,
+  skillVersions,
+  userSkillVersionPins,
   type Skill,
   type InsertSkill,
   type SkillScript,
@@ -21,6 +23,9 @@ import {
   type UserSkill,
   type SkillUsage,
   type SkillReview,
+  type SkillVersion,
+  type InsertSkillVersion,
+  type UserSkillVersionPin,
 } from "../drizzle/schema";
 
 // ============================================
@@ -846,4 +851,212 @@ export async function getSkillRecommendations(
     .sort((a, b) => b.score - a.score)
     .slice(0, limit)
     .map(s => s.skill);
+}
+
+
+// ============================================
+// SKILL VERSIONING
+// ============================================
+
+/**
+ * Create a new version of a skill
+ */
+export async function createSkillVersion(
+  skillId: number,
+  version: string,
+  changelog: string,
+  createdBy?: number
+): Promise<SkillVersion> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  // Get current skill content
+  const skill = await getSkillById(skillId);
+  if (!skill) throw new Error("Skill not found");
+  
+  // Create version snapshot
+  const [result] = await db.insert(skillVersions).values({
+    skillId,
+    version,
+    content: skill.content,
+    instructions: skill.instructions,
+    examples: skill.examples,
+    changelog,
+    createdBy,
+  });
+  
+  // Update skill's current version
+  await db.update(skills).set({ version }).where(eq(skills.id, skillId));
+  
+  const [newVersion] = await db
+    .select()
+    .from(skillVersions)
+    .where(eq(skillVersions.id, result.insertId));
+  
+  return newVersion;
+}
+
+/**
+ * Get all versions of a skill
+ */
+export async function getSkillVersions(skillId: number): Promise<SkillVersion[]> {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return db
+    .select()
+    .from(skillVersions)
+    .where(eq(skillVersions.skillId, skillId))
+    .orderBy(desc(skillVersions.createdAt));
+}
+
+/**
+ * Get a specific version of a skill
+ */
+export async function getSkillVersion(versionId: number): Promise<SkillVersion | null> {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const [version] = await db
+    .select()
+    .from(skillVersions)
+    .where(eq(skillVersions.id, versionId));
+  
+  return version || null;
+}
+
+/**
+ * Revert a skill to a specific version
+ */
+export async function revertToVersion(
+  skillId: number,
+  versionId: number,
+  userId: number
+): Promise<Skill> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const version = await getSkillVersion(versionId);
+  if (!version) throw new Error("Version not found");
+  if (version.skillId !== skillId) throw new Error("Version does not belong to this skill");
+  
+  // Update skill with version content
+  await db.update(skills).set({
+    content: version.content,
+    instructions: version.instructions,
+    examples: version.examples,
+    version: version.version,
+  }).where(eq(skills.id, skillId));
+  
+  // Create a new version entry for the revert
+  await createSkillVersion(
+    skillId,
+    `${version.version}-reverted`,
+    `Reverted to version ${version.version}`,
+    userId
+  );
+  
+  const skill = await getSkillById(skillId);
+  return skill!;
+}
+
+/**
+ * Pin a specific version for a user's installed skill
+ */
+export async function pinSkillVersion(
+  userId: number,
+  skillId: number,
+  versionId: number
+): Promise<UserSkillVersionPin> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  // Remove existing pin if any
+  await db.delete(userSkillVersionPins).where(
+    and(
+      eq(userSkillVersionPins.userId, userId),
+      eq(userSkillVersionPins.skillId, skillId)
+    )
+  );
+  
+  // Create new pin
+  const [result] = await db.insert(userSkillVersionPins).values({
+    userId,
+    skillId,
+    versionId,
+  });
+  
+  const [pin] = await db
+    .select()
+    .from(userSkillVersionPins)
+    .where(eq(userSkillVersionPins.id, result.insertId));
+  
+  return pin;
+}
+
+/**
+ * Unpin version (use latest)
+ */
+export async function unpinSkillVersion(userId: number, skillId: number): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  
+  await db.delete(userSkillVersionPins).where(
+    and(
+      eq(userSkillVersionPins.userId, userId),
+      eq(userSkillVersionPins.skillId, skillId)
+    )
+  );
+}
+
+/**
+ * Get user's pinned version for a skill
+ */
+export async function getUserPinnedVersion(
+  userId: number,
+  skillId: number
+): Promise<SkillVersion | null> {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const [pin] = await db
+    .select()
+    .from(userSkillVersionPins)
+    .where(
+      and(
+        eq(userSkillVersionPins.userId, userId),
+        eq(userSkillVersionPins.skillId, skillId)
+      )
+    );
+  
+  if (!pin) return null;
+  
+  return getSkillVersion(pin.versionId);
+}
+
+/**
+ * Get skill content for a user (respects pinned version)
+ */
+export async function getSkillContentForUser(
+  userId: number,
+  skillId: number
+): Promise<{ content: string; version: string; isPinned: boolean }> {
+  const pinnedVersion = await getUserPinnedVersion(userId, skillId);
+  
+  if (pinnedVersion) {
+    return {
+      content: pinnedVersion.content,
+      version: pinnedVersion.version,
+      isPinned: true,
+    };
+  }
+  
+  const skill = await getSkillById(skillId);
+  if (!skill) throw new Error("Skill not found");
+  
+  return {
+    content: skill.content,
+    version: skill.version,
+    isPinned: false,
+  };
 }

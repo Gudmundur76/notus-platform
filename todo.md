@@ -590,3 +590,89 @@
 ### Tests
 - [x] 93 out of 97 tests passing
 - [x] 4 failing tests are due to external embedding API unavailability (infrastructure issue)
+
+
+## Skill Versioning System
+
+### Database Schema
+- [ ] Create skillVersions table (skillId, version, content, changelog, createdAt)
+- [ ] Add currentVersion column to skills table
+- [ ] Push database migrations
+
+### API Endpoints
+- [ ] Add createSkillVersion function
+- [ ] Add getSkillVersions function
+- [ ] Add getSkillVersion function (specific version)
+- [ ] Add revertToVersion function
+- [ ] Add pinVersion function for user skill installations
+- [ ] Add versioning endpoints to skillsRouter
+
+### UI Components
+- [ ] Add version history tab to SkillDetail page
+- [ ] Add version selector dropdown
+- [ ] Add changelog display
+- [ ] Add "Create New Version" button for skill owners
+- [ ] Add "Pin Version" option for installed skills
+
+## Memory Analytics Dashboard
+
+### Database Schema
+- [ ] Create memoryAccessLog table (memoryId, accessedAt, context)
+- [ ] Add analytics columns to memory_entries if needed
+
+### Analytics Functions
+- [ ] Add getMemoryUsageStats function
+- [ ] Add getMostAccessedMemories function
+- [ ] Add getMemoryAccessTimeline function
+- [ ] Add getContextRelevanceScores function
+- [ ] Add getMemoryGrowthTrend function
+
+### UI Components
+- [ ] Create MemoryAnalytics.tsx page
+- [ ] Add usage stats cards (total, by category, by type)
+- [ ] Add most accessed memories list
+- [ ] Add access timeline chart
+- [ ] Add context relevance visualization
+- [ ] Add memory growth trend chart
+- [ ] Add route to App.tsx
+
+
+## Skill Versioning & Memory Analytics (December 26, 2025) - COMPLETED
+
+### Skill Versioning System
+- [x] Create skillVersions database table
+- [x] Create pinnedVersions database table
+- [x] Implement createSkillVersion function
+- [x] Implement getSkillVersions function
+- [x] Implement getSkillVersionById function
+- [x] Implement pinSkillVersion function
+- [x] Implement unpinSkillVersion function
+- [x] Add versioning endpoints to skillsRouter
+- [x] Add Version History tab to SkillDetail.tsx
+- [x] Display version list with changelog
+- [x] Add pin/unpin functionality for users
+
+### Memory Analytics Dashboard
+- [x] Create memoryAccessLog database table
+- [x] Create memoryAnalyticsSnapshots database table
+- [x] Implement logMemoryAccess function
+- [x] Implement getMemoryUsageStats function
+- [x] Implement getMostAccessedMemories function
+- [x] Implement getMemoryAccessTimeline function
+- [x] Implement getContextRelevanceDistribution function
+- [x] Implement getMemoryGrowthTrend function
+- [x] Implement getMemoryInsights function
+- [x] Create memoryAnalyticsRouter with tRPC endpoints
+- [x] Create MemoryAnalytics.tsx dashboard page
+- [x] Display Memory Health Score (0-100)
+- [x] Show total memories, accesses, avg importance, pinned count
+- [x] Display memories by type chart
+- [x] Display memories by category chart
+- [x] Show most accessed memories list
+- [x] Add Access Patterns, Growth, and Insights tabs
+- [x] Add route /memory/analytics to App.tsx
+
+### Tests
+- [x] Create versioning-analytics.test.ts
+- [x] 14 tests for skill versioning and memory analytics
+- [x] All tests passing

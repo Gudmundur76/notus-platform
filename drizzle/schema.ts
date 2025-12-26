@@ -579,3 +579,70 @@ export const skillReviews = mysqlTable("skill_reviews", {
 
 export type SkillReview = typeof skillReviews.$inferSelect;
 export type InsertSkillReview = typeof skillReviews.$inferInsert;
+
+
+/**
+ * Skill Versions Table
+ * Track version history for skills
+ */
+export const skillVersions = mysqlTable("skill_versions", {
+  id: int("id").autoincrement().primaryKey(),
+  skillId: int("skill_id").notNull(),
+  version: varchar("version", { length: 20 }).notNull(),
+  content: text("content").notNull(), // Snapshot of skill content at this version
+  instructions: text("instructions"),
+  examples: text("examples"),
+  changelog: text("changelog"), // What changed in this version
+  createdBy: int("created_by"), // User who created this version
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+export type SkillVersion = typeof skillVersions.$inferSelect;
+export type InsertSkillVersion = typeof skillVersions.$inferInsert;
+
+/**
+ * User Skill Version Pins Table
+ * Allow users to pin specific versions of installed skills
+ */
+export const userSkillVersionPins = mysqlTable("user_skill_version_pins", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("user_id").notNull(),
+  skillId: int("skill_id").notNull(),
+  versionId: int("version_id").notNull(), // References skillVersions.id
+  pinnedAt: timestamp("pinned_at").defaultNow().notNull(),
+});
+export type UserSkillVersionPin = typeof userSkillVersionPins.$inferSelect;
+export type InsertUserSkillVersionPin = typeof userSkillVersionPins.$inferInsert;
+
+/**
+ * Memory Access Log Table
+ * Track when and how memories are accessed for analytics
+ */
+export const memoryAccessLog = mysqlTable("memory_access_log", {
+  id: int("id").autoincrement().primaryKey(),
+  memoryId: int("memory_id").notNull(),
+  userId: int("user_id").notNull(),
+  accessType: mysqlEnum("access_type", ["read", "write", "search", "context"]).notNull(),
+  context: varchar("context", { length: 255 }), // What triggered the access (task, conversation, etc.)
+  relevanceScore: int("relevance_score"), // 0-100, how relevant was this memory to the context
+  accessedAt: timestamp("accessed_at").defaultNow().notNull(),
+});
+export type MemoryAccessLog = typeof memoryAccessLog.$inferSelect;
+export type InsertMemoryAccessLog = typeof memoryAccessLog.$inferInsert;
+
+/**
+ * Memory Analytics Snapshots Table
+ * Store periodic snapshots of memory statistics
+ */
+export const memoryAnalyticsSnapshots = mysqlTable("memory_analytics_snapshots", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("user_id").notNull(),
+  totalMemories: int("total_memories").notNull(),
+  factCount: int("fact_count").notNull(),
+  preferenceCount: int("preference_count").notNull(),
+  contextCount: int("context_count").notNull(),
+  avgImportance: int("avg_importance").notNull(), // Stored as 0-100
+  avgAccessCount: int("avg_access_count").notNull(),
+  snapshotDate: timestamp("snapshot_date").defaultNow().notNull(),
+});
+export type MemoryAnalyticsSnapshot = typeof memoryAnalyticsSnapshots.$inferSelect;
+export type InsertMemoryAnalyticsSnapshot = typeof memoryAnalyticsSnapshots.$inferInsert;

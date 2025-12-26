@@ -35,6 +35,13 @@ import {
   forkSkill,
   searchSkillsFuzzy,
   getSkillRecommendations,
+  createSkillVersion,
+  getSkillVersions,
+  getSkillVersion,
+  revertToVersion,
+  pinSkillVersion,
+  unpinSkillVersion,
+  getUserPinnedVersion,
 } from "./skills";
 
 export const skillsRouter = router({
@@ -460,5 +467,88 @@ export const skillsRouter = router({
     .input(z.object({ limit: z.number().min(1).max(20).default(5) }))
     .query(async ({ ctx, input }) => {
       return getSkillRecommendations(ctx.user.id, input.limit);
+    }),
+
+  // ============================================
+  // VERSIONING ENDPOINTS
+  // ============================================
+
+  /**
+   * Create a new version of a skill
+   */
+  createVersion: protectedProcedure
+    .input(z.object({
+      skillId: z.number(),
+      version: z.string().regex(/^\d+\.\d+\.\d+$/, "Version must be in semver format (e.g., 1.0.0)"),
+      changelog: z.string().min(1),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      return createSkillVersion(
+        input.skillId,
+        input.version,
+        input.changelog,
+        ctx.user.id
+      );
+    }),
+
+  /**
+   * Get all versions of a skill
+   */
+  getVersions: publicProcedure
+    .input(z.object({ skillId: z.number() }))
+    .query(async ({ input }) => {
+      return getSkillVersions(input.skillId);
+    }),
+
+  /**
+   * Get a specific version
+   */
+  getVersion: publicProcedure
+    .input(z.object({ versionId: z.number() }))
+    .query(async ({ input }) => {
+      return getSkillVersion(input.versionId);
+    }),
+
+  /**
+   * Revert skill to a specific version
+   */
+  revertToVersion: protectedProcedure
+    .input(z.object({
+      skillId: z.number(),
+      versionId: z.number(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      return revertToVersion(input.skillId, input.versionId, ctx.user.id);
+    }),
+
+  /**
+   * Pin a specific version for user's installed skill
+   */
+  pinVersion: protectedProcedure
+    .input(z.object({
+      skillId: z.number(),
+      versionId: z.number(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      return pinSkillVersion(ctx.user.id, input.skillId, input.versionId);
+    }),
+
+  /**
+   * Unpin version (use latest)
+   */
+  unpinVersion: protectedProcedure
+    .input(z.object({ skillId: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      await unpinSkillVersion(ctx.user.id, input.skillId);
+      return { success: true };
+    }),
+
+  /**
+   * Get user's pinned version for a skill
+   */
+  getPinnedVersion: protectedProcedure
+    .input(z.object({ skillId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      return getUserPinnedVersion(ctx.user.id, input.skillId);
     }),
 });

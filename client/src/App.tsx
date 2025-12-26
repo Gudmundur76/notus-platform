@@ -27,6 +27,7 @@ import SkillDetail from "./pages/SkillDetail";
 import MySkills from "./pages/MySkills";
 import CreateSkill from "./pages/CreateSkill";
 import Webhooks from "./pages/Webhooks";
+import MemoryAnalytics from "./pages/MemoryAnalytics";
 import { lazy, Suspense } from "react";
 import { Loader2 } from "lucide-react";
 
@@ -50,6 +51,7 @@ function Router() {
       
       {/* AI Features */}
       <Route path={"/memory"} component={Memory} />
+      <Route path={"/memory/analytics"} component={MemoryAnalytics} />
       <Route path={"/mirror-agents"} component={MirrorAgents} />
       <Route path="/knowledge-graph">
         <Suspense fallback={<LoadingFallback />}>

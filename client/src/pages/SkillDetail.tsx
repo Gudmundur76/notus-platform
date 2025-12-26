@@ -26,6 +26,9 @@ import {
   Terminal,
   Users,
   ThumbsUp,
+  History,
+  Pin,
+  GitBranch,
 } from "lucide-react";
 
 const categoryIcons: Record<string, React.ReactNode> = {
@@ -73,6 +76,17 @@ export default function SkillDetail() {
     { enabled: !!skill?.id }
   );
   const { data: mySkills } = trpc.skills.mySkills.useQuery();
+  const { data: versions } = trpc.skills.getVersions.useQuery(
+    { skillId: skill?.id || 0 },
+    { enabled: !!skill?.id }
+  );
+  
+  const isInstalled = mySkills?.some((s) => s.skillId === skill?.id);
+  
+  const { data: pinnedVersion } = trpc.skills.getPinnedVersion.useQuery(
+    { skillId: skill?.id || 0 },
+    { enabled: !!skill?.id && !!isInstalled }
+  );
 
   const installMutation = trpc.skills.install.useMutation({
     onSuccess: () => {
@@ -92,6 +106,24 @@ export default function SkillDetail() {
     },
   });
 
+  const pinVersionMutation = trpc.skills.pinVersion.useMutation({
+    onSuccess: () => {
+      toast.success("Version pinned successfully");
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+
+  const unpinVersionMutation = trpc.skills.unpinVersion.useMutation({
+    onSuccess: () => {
+      toast.success("Now using latest version");
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+
   const reviewMutation = trpc.skills.addReview.useMutation({
     onSuccess: () => {
       toast.success("Review submitted!");
@@ -101,8 +133,6 @@ export default function SkillDetail() {
       toast.error(error.message);
     },
   });
-
-  const isInstalled = mySkills?.some((s) => s.skillId === skill?.id);
 
   const handleInstall = () => {
     if (!skill) return;
@@ -242,6 +272,7 @@ export default function SkillDetail() {
               <TabsTrigger value="templates">Templates ({templates.length})</TabsTrigger>
             )}
             <TabsTrigger value="reviews">Reviews ({reviews?.length || 0})</TabsTrigger>
+            <TabsTrigger value="versions">Version History</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
@@ -460,6 +491,100 @@ export default function SkillDetail() {
                 No reviews yet. Be the first to review this skill!
               </div>
             )}
+          </TabsContent>
+
+          {/* Version History Tab */}
+          <TabsContent value="versions" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <History className="h-5 w-5" />
+                  Version History
+                </CardTitle>
+                <CardDescription>
+                  Track changes and pin specific versions
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {pinnedVersion && (
+                  <div className="mb-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Pin className="h-4 w-4 text-blue-500" />
+                        <span className="text-sm">Pinned to version {pinnedVersion.version}</span>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => skill && unpinVersionMutation.mutate({ skillId: skill.id })}
+                        disabled={unpinVersionMutation.isPending}
+                      >
+                        Use Latest
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {versions && versions.length > 0 ? (
+                  <div className="space-y-3">
+                    {versions.map((version, index) => (
+                      <div
+                        key={version.id}
+                        className={`p-4 rounded-lg border ${
+                          index === 0 ? "border-green-500/50 bg-green-500/5" : ""
+                        } ${pinnedVersion?.id === version.id ? "border-blue-500/50 bg-blue-500/5" : ""}`}
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <GitBranch className="h-4 w-4 text-muted-foreground" />
+                            <span className="font-mono font-medium">v{version.version}</span>
+                            {index === 0 && (
+                              <Badge variant="outline" className="text-green-500 border-green-500">
+                                Latest
+                              </Badge>
+                            )}
+                            {pinnedVersion?.id === version.id && (
+                              <Badge variant="outline" className="text-blue-500 border-blue-500">
+                                <Pin className="h-3 w-3 mr-1" />
+                                Pinned
+                              </Badge>
+                            )}
+                          </div>
+                          {isInstalled && pinnedVersion?.id !== version.id && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => skill && pinVersionMutation.mutate({
+                                skillId: skill.id,
+                                versionId: version.id,
+                              })}
+                              disabled={pinVersionMutation.isPending}
+                            >
+                              <Pin className="h-3 w-3 mr-1" />
+                              Pin Version
+                            </Button>
+                          )}
+                        </div>
+                        {version.changelog && (
+                          <p className="text-sm text-muted-foreground mb-2">
+                            {version.changelog}
+                          </p>
+                        )}
+                        <p className="text-xs text-muted-foreground">
+                          Released {new Date(version.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <History className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                    <p>No version history available</p>
+                    <p className="text-sm">This skill is at version {skill?.version || "1.0.0"}</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </div>
