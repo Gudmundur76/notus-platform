@@ -18,6 +18,18 @@ import {
   getUserPreferences,
   updateUserPreferences,
   getContextForTask,
+  toggleMemoryPin,
+  getPinnedMemories,
+  setMemoryCategory,
+  getMemoriesByCategory,
+  getMemoryCategories,
+  setMemoryTags,
+  getMemoriesByTag,
+  searchMemoriesWithHighlight,
+  getMemoryTimeline,
+  exportMemories,
+  importMemories,
+  getMemoryStats,
 } from "./memory";
 
 export const memoryRouter = router({
@@ -191,4 +203,82 @@ export const memoryRouter = router({
         input.conversationId
       );
     }),
+
+  // ============================================================================
+  // Enhanced Memory Features
+  // ============================================================================
+
+  togglePin: protectedProcedure
+    .input(z.object({ memoryId: z.number() }))
+    .mutation(async ({ input }) => {
+      return await toggleMemoryPin(input.memoryId);
+    }),
+
+  getPinned: protectedProcedure.query(async ({ ctx }) => {
+    return await getPinnedMemories(ctx.user.id);
+  }),
+
+  setCategory: protectedProcedure
+    .input(z.object({
+      memoryId: z.number(),
+      category: z.string().nullable(),
+    }))
+    .mutation(async ({ input }) => {
+      await setMemoryCategory(input.memoryId, input.category);
+      return { success: true };
+    }),
+
+  getByCategory: protectedProcedure
+    .input(z.object({ category: z.string() }))
+    .query(async ({ ctx, input }) => {
+      return await getMemoriesByCategory(ctx.user.id, input.category);
+    }),
+
+  getCategories: protectedProcedure.query(async ({ ctx }) => {
+    return await getMemoryCategories(ctx.user.id);
+  }),
+
+  setTags: protectedProcedure
+    .input(z.object({
+      memoryId: z.number(),
+      tags: z.array(z.string()),
+    }))
+    .mutation(async ({ input }) => {
+      await setMemoryTags(input.memoryId, input.tags);
+      return { success: true };
+    }),
+
+  getByTag: protectedProcedure
+    .input(z.object({ tag: z.string() }))
+    .query(async ({ ctx, input }) => {
+      return await getMemoriesByTag(ctx.user.id, input.tag);
+    }),
+
+  searchWithHighlight: protectedProcedure
+    .input(z.object({ query: z.string() }))
+    .query(async ({ ctx, input }) => {
+      return await searchMemoriesWithHighlight(ctx.user.id, input.query);
+    }),
+
+  getTimeline: protectedProcedure
+    .input(z.object({ days: z.number().min(1).max(365).default(30) }))
+    .query(async ({ ctx, input }) => {
+      return await getMemoryTimeline(ctx.user.id, input.days);
+    }),
+
+  export: protectedProcedure
+    .input(z.object({ format: z.enum(["json", "markdown"]).default("json") }))
+    .query(async ({ ctx, input }) => {
+      return await exportMemories(ctx.user.id, input.format);
+    }),
+
+  import: protectedProcedure
+    .input(z.object({ jsonData: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      return await importMemories(ctx.user.id, input.jsonData);
+    }),
+
+  getStats: protectedProcedure.query(async ({ ctx }) => {
+    return await getMemoryStats(ctx.user.id);
+  }),
 });

@@ -70,6 +70,9 @@ export const memoryEntries = mysqlTable("memory_entries", {
   importance: int("importance").default(5).notNull(), // 1-10 scale
   accessCount: int("accessCount").default(0).notNull(),
   lastAccessedAt: timestamp("lastAccessedAt"),
+  category: varchar("category", { length: 100 }), // Custom category for organization
+  isPinned: int("is_pinned").default(0).notNull(), // 1 = pinned, 0 = not pinned
+  tags: text("tags"), // JSON array of tags
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
@@ -482,6 +485,8 @@ export const skills = mysqlTable("skills", {
   ratingCount: int("rating_count").default(0).notNull(),
   installCount: int("install_count").default(0).notNull(),
   tags: text("tags"), // JSON array of tags
+  sourceUrl: varchar("source_url", { length: 512 }), // GitHub URL if imported
+  forkedFrom: int("forked_from"), // Original skill ID if forked
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
 });

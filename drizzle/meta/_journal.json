@@ -64,6 +64,20 @@
       "when": 1766671688606,
       "tag": "0008_tiny_xavin",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "5",
+      "when": 1766739515188,
+      "tag": "0009_gigantic_eternity",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "5",
+      "when": 1766739547164,
+      "tag": "0010_mysterious_stardust",
+      "breakpoints": true
     }
   ]
 }

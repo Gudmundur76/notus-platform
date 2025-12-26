@@ -599,3 +599,251 @@ export async function getSkillCategories(): Promise<{ category: string; count: n
   
   return result;
 }
+
+
+// ============================================
+// SKILL IMPORT & VERSIONING
+// ============================================
+
+/**
+ * Import skill from GitHub URL
+ */
+export async function importSkillFromGitHub(
+  githubUrl: string,
+  userId: number
+): Promise<Skill | null> {
+  try {
+    const rawUrl = githubUrl
+      .replace("github.com", "raw.githubusercontent.com")
+      .replace("/blob/", "/")
+      .replace("/tree/", "/");
+    
+    const skillMdUrl = rawUrl.endsWith("/") 
+      ? `${rawUrl}SKILL.md` 
+      : `${rawUrl}/SKILL.md`;
+    
+    const response = await fetch(skillMdUrl);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch skill: ${response.statusText}`);
+    }
+    
+    const content = await response.text();
+    const parsed = parseSkillMarkdown(content);
+    
+    const slug = parsed.name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "") + "-" + Date.now();
+    
+    const validCategories = ["development", "data_analysis", "business", "communication", "creative", "productivity", "security", "other"] as const;
+    const category = validCategories.includes(parsed.category as any) 
+      ? (parsed.category as typeof validCategories[number])
+      : "other";
+    
+    const skill = await createSkill({
+      name: parsed.name,
+      slug,
+      description: parsed.description,
+      category,
+      content: content,
+      whenToUse: parsed.whenToUse,
+      instructions: parsed.instructions,
+      examples: JSON.stringify(parsed.examples || []),
+      tags: JSON.stringify(parsed.tags || []),
+      isPublic: 0,
+      isBuiltIn: 0,
+      createdBy: userId,
+      sourceUrl: githubUrl,
+      version: "1.0.0",
+    });
+    
+    return skill;
+  } catch (error) {
+    console.error("Failed to import skill from GitHub:", error);
+    return null;
+  }
+}
+
+function parseSkillMarkdown(content: string): {
+  name: string;
+  description: string;
+  category?: string;
+  whenToUse?: string;
+  instructions?: string;
+  examples?: string[];
+  tags?: string[];
+} {
+  const lines = content.split("\n");
+  let name = "Imported Skill";
+  let description = "";
+  let category = "other";
+  let whenToUse = "";
+  let instructions = "";
+  const examples: string[] = [];
+  const tags: string[] = [];
+  
+  let currentSection = "";
+  let sectionContent: string[] = [];
+  
+  for (const line of lines) {
+    if (line.startsWith("# ")) {
+      name = line.replace("# ", "").trim();
+    } else if (line.startsWith("## ")) {
+      if (currentSection && sectionContent.length > 0) {
+        const text = sectionContent.join("\n").trim();
+        if (currentSection.toLowerCase().includes("when to use")) {
+          whenToUse = text;
+        } else if (currentSection.toLowerCase().includes("instruction")) {
+          instructions = text;
+        }
+      }
+      currentSection = line.replace("## ", "").trim();
+      sectionContent = [];
+    } else if (line.includes("Category:")) {
+      category = line.replace(/\*\*Category:\*\*|Category:/i, "").trim().toLowerCase();
+    } else if (line.includes("Tags:")) {
+      const tagStr = line.replace(/\*\*Tags:\*\*|Tags:/i, "").trim();
+      tagStr.split(",").forEach(t => {
+        const cleaned = t.trim().replace(/^#/, "");
+        if (cleaned) tags.push(cleaned);
+      });
+    } else if (currentSection) {
+      sectionContent.push(line);
+    } else if (!description && line.trim() && !line.startsWith("#")) {
+      description = line.trim();
+    }
+  }
+  
+  return { name, description, category, whenToUse, instructions, examples, tags };
+}
+
+/**
+ * Fork a skill (create a copy for customization)
+ */
+export async function forkSkill(
+  skillId: number,
+  userId: number,
+  newName?: string
+): Promise<Skill | null> {
+  const original = await getSkillById(skillId);
+  if (!original) return null;
+  
+  const slug = `${original.slug}-fork-${Date.now()}`;
+  const name = newName || `${original.name} (Fork)`;
+  
+  const forked = await createSkill({
+    name,
+    slug,
+    description: original.description,
+    category: original.category,
+    content: original.content,
+    whenToUse: original.whenToUse,
+    instructions: original.instructions,
+    examples: original.examples,
+    tags: original.tags,
+    isPublic: 0,
+    isBuiltIn: 0,
+    createdBy: userId,
+    forkedFrom: skillId,
+    version: "1.0.0",
+  });
+  
+  const scripts = await getSkillScripts(skillId);
+  for (const script of scripts) {
+    await addSkillScript({
+      skillId: forked.id,
+      name: script.name,
+      language: script.language,
+      content: script.content,
+      description: script.description,
+    });
+  }
+  
+  const templates = await getSkillTemplates(skillId);
+  for (const template of templates) {
+    await addSkillTemplate({
+      skillId: forked.id,
+      name: template.name,
+      format: template.format,
+      content: template.content,
+      description: template.description,
+    });
+  }
+  
+  return forked;
+}
+
+/**
+ * Search skills with fuzzy matching
+ */
+export async function searchSkillsFuzzy(
+  query: string,
+  limit: number = 20
+): Promise<Skill[]> {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const searchTerms = query.toLowerCase().split(/\s+/);
+  
+  const allSkills = await db
+    .select()
+    .from(skills)
+    .where(eq(skills.isPublic, 1));
+  
+  const scored = allSkills.map(skill => {
+    let score = 0;
+    const searchText = `${skill.name} ${skill.description} ${skill.tags || ""} ${skill.category}`.toLowerCase();
+    
+    for (const term of searchTerms) {
+      if (searchText.includes(term)) {
+        score += 10;
+      }
+      for (const word of searchText.split(/\s+/)) {
+        if (word.startsWith(term) || term.startsWith(word)) {
+          score += 5;
+        }
+      }
+    }
+    
+    return { skill, score };
+  });
+  
+  return scored
+    .filter(s => s.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, limit)
+    .map(s => s.skill);
+}
+
+/**
+ * Get skill recommendations based on user's installed skills
+ */
+export async function getSkillRecommendations(
+  userId: number,
+  limit: number = 5
+): Promise<Skill[]> {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const installed = await getUserSkills(userId);
+  const installedIds = new Set(installed.map(us => us.skillId));
+  const installedCategories = new Set(installed.map(us => us.skill.category));
+  
+  const allPublic = await db
+    .select()
+    .from(skills)
+    .where(eq(skills.isPublic, 1))
+    .orderBy(desc(skills.installCount));
+  
+  const recommendations = allPublic.filter(s => !installedIds.has(s.id));
+  
+  const scored = recommendations.map(skill => ({
+    skill,
+    score: installedCategories.has(skill.category) ? 10 : 5,
+  }));
+  
+  return scored
+    .sort((a, b) => b.score - a.score)
+    .slice(0, limit)
+    .map(s => s.skill);
+}

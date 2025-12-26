@@ -327,3 +327,349 @@ export async function extractAndStoreMemory(
     lastTaskType: taskType,
   });
 }
+
+
+// ============================================================================
+// Enhanced Memory Features
+// ============================================================================
+
+/**
+ * Pin/unpin a memory entry
+ */
+export async function toggleMemoryPin(memoryId: number): Promise<MemoryEntry | null> {
+  const db = await getDb();
+  if (!db) return null;
+
+  const [memory] = await db
+    .select()
+    .from(memoryEntries)
+    .where(eq(memoryEntries.id, memoryId));
+
+  if (!memory) return null;
+
+  const newPinned = memory.isPinned === 1 ? 0 : 1;
+  await db
+    .update(memoryEntries)
+    .set({ isPinned: newPinned })
+    .where(eq(memoryEntries.id, memoryId));
+
+  return { ...memory, isPinned: newPinned };
+}
+
+/**
+ * Get pinned memories for a user
+ */
+export async function getPinnedMemories(userId: number): Promise<MemoryEntry[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  return await db
+    .select()
+    .from(memoryEntries)
+    .where(and(eq(memoryEntries.userId, userId), eq(memoryEntries.isPinned, 1)))
+    .orderBy(desc(memoryEntries.updatedAt));
+}
+
+/**
+ * Set category for a memory entry
+ */
+export async function setMemoryCategory(
+  memoryId: number,
+  category: string | null
+): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+
+  await db
+    .update(memoryEntries)
+    .set({ category })
+    .where(eq(memoryEntries.id, memoryId));
+}
+
+/**
+ * Get memories by category
+ */
+export async function getMemoriesByCategory(
+  userId: number,
+  category: string
+): Promise<MemoryEntry[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  return await db
+    .select()
+    .from(memoryEntries)
+    .where(and(eq(memoryEntries.userId, userId), eq(memoryEntries.category, category)))
+    .orderBy(desc(memoryEntries.importance), desc(memoryEntries.updatedAt));
+}
+
+/**
+ * Get all unique categories for a user
+ */
+export async function getMemoryCategories(userId: number): Promise<string[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  const result = await db
+    .selectDistinct({ category: memoryEntries.category })
+    .from(memoryEntries)
+    .where(and(eq(memoryEntries.userId, userId), sql`${memoryEntries.category} IS NOT NULL`));
+
+  return result.map(r => r.category).filter((c): c is string => c !== null);
+}
+
+/**
+ * Add tags to a memory entry
+ */
+export async function setMemoryTags(memoryId: number, tags: string[]): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+
+  await db
+    .update(memoryEntries)
+    .set({ tags: JSON.stringify(tags) })
+    .where(eq(memoryEntries.id, memoryId));
+}
+
+/**
+ * Search memories by tag
+ */
+export async function getMemoriesByTag(userId: number, tag: string): Promise<MemoryEntry[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  const allMemories = await db
+    .select()
+    .from(memoryEntries)
+    .where(eq(memoryEntries.userId, userId));
+
+  return allMemories.filter(m => {
+    if (!m.tags) return false;
+    try {
+      const tags = JSON.parse(m.tags) as string[];
+      return tags.some(t => t.toLowerCase().includes(tag.toLowerCase()));
+    } catch {
+      return false;
+    }
+  });
+}
+
+/**
+ * Enhanced search with highlighting
+ */
+export async function searchMemoriesWithHighlight(
+  userId: number,
+  searchTerm: string
+): Promise<Array<MemoryEntry & { highlights: { key: string[]; value: string[] } }>> {
+  const memories = await searchMemories(userId, searchTerm);
+  const terms = searchTerm.toLowerCase().split(/\s+/);
+
+  return memories.map(memory => {
+    const keyHighlights: string[] = [];
+    const valueHighlights: string[] = [];
+
+    for (const term of terms) {
+      const keyIndex = memory.key.toLowerCase().indexOf(term);
+      if (keyIndex !== -1) {
+        keyHighlights.push(
+          memory.key.substring(Math.max(0, keyIndex - 20), keyIndex + term.length + 20)
+        );
+      }
+
+      const valueIndex = memory.value.toLowerCase().indexOf(term);
+      if (valueIndex !== -1) {
+        valueHighlights.push(
+          memory.value.substring(Math.max(0, valueIndex - 50), valueIndex + term.length + 50)
+        );
+      }
+    }
+
+    return {
+      ...memory,
+      highlights: {
+        key: keyHighlights,
+        value: valueHighlights,
+      },
+    };
+  });
+}
+
+/**
+ * Get memory timeline (grouped by date)
+ */
+export async function getMemoryTimeline(
+  userId: number,
+  days: number = 30
+): Promise<Record<string, MemoryEntry[]>> {
+  const db = await getDb();
+  if (!db) return {};
+
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - days);
+
+  const memories = await db
+    .select()
+    .from(memoryEntries)
+    .where(
+      and(
+        eq(memoryEntries.userId, userId),
+        sql`${memoryEntries.createdAt} >= ${cutoff}`
+      )
+    )
+    .orderBy(desc(memoryEntries.createdAt));
+
+  const timeline: Record<string, MemoryEntry[]> = {};
+  for (const memory of memories) {
+    const dateKey = memory.createdAt.toISOString().split("T")[0];
+    if (!timeline[dateKey]) {
+      timeline[dateKey] = [];
+    }
+    timeline[dateKey].push(memory);
+  }
+
+  return timeline;
+}
+
+/**
+ * Export all memories for a user
+ */
+export async function exportMemories(
+  userId: number,
+  format: "json" | "markdown" = "json"
+): Promise<string> {
+  const memories = await getUserMemories(userId);
+  const preferences = await getUserPreferences(userId);
+  const conversations = await getUserConversations(userId);
+
+  if (format === "json") {
+    return JSON.stringify(
+      {
+        exportedAt: new Date().toISOString(),
+        memories,
+        preferences,
+        conversationCount: conversations.length,
+      },
+      null,
+      2
+    );
+  }
+
+  // Markdown format
+  let md = `# Memory Export\n\n`;
+  md += `Exported: ${new Date().toISOString()}\n\n`;
+  md += `## Statistics\n\n`;
+  md += `- Total Memories: ${memories.length}\n`;
+  md += `- Conversations: ${conversations.length}\n\n`;
+
+  md += `## Memories\n\n`;
+
+  const byType: Record<string, MemoryEntry[]> = {};
+  for (const m of memories) {
+    if (!byType[m.type]) byType[m.type] = [];
+    byType[m.type].push(m);
+  }
+
+  for (const [type, typeMemories] of Object.entries(byType)) {
+    md += `### ${type.charAt(0).toUpperCase() + type.slice(1)}s\n\n`;
+    for (const m of typeMemories) {
+      md += `- **${m.key}**: ${m.value}\n`;
+      if (m.category) md += `  - Category: ${m.category}\n`;
+      if (m.isPinned) md += `  - 📌 Pinned\n`;
+    }
+    md += `\n`;
+  }
+
+  return md;
+}
+
+/**
+ * Import memories from JSON export
+ */
+export async function importMemories(
+  userId: number,
+  jsonData: string
+): Promise<{ imported: number; skipped: number }> {
+  let data: { memories?: Array<Partial<MemoryEntry>> };
+  try {
+    data = JSON.parse(jsonData);
+  } catch {
+    throw new Error("Invalid JSON format");
+  }
+
+  if (!data.memories || !Array.isArray(data.memories)) {
+    throw new Error("No memories array found in import data");
+  }
+
+  let imported = 0;
+  let skipped = 0;
+
+  for (const memory of data.memories) {
+    if (!memory.key || !memory.value || !memory.type) {
+      skipped++;
+      continue;
+    }
+
+    try {
+      await createMemoryEntry({
+        userId,
+        type: memory.type as "fact" | "preference" | "context" | "insight",
+        key: memory.key,
+        value: memory.value,
+        source: memory.source || "import",
+        importance: memory.importance || 5,
+        accessCount: 0,
+        category: memory.category,
+        isPinned: memory.isPinned || 0,
+        tags: memory.tags,
+      });
+      imported++;
+    } catch {
+      skipped++;
+    }
+  }
+
+  return { imported, skipped };
+}
+
+/**
+ * Get memory statistics for a user
+ */
+export async function getMemoryStats(userId: number): Promise<{
+  total: number;
+  byType: Record<string, number>;
+  byCategory: Record<string, number>;
+  pinned: number;
+  recentlyAccessed: number;
+}> {
+  const db = await getDb();
+  if (!db) {
+    return { total: 0, byType: {}, byCategory: {}, pinned: 0, recentlyAccessed: 0 };
+  }
+
+  const memories = await getUserMemories(userId);
+
+  const byType: Record<string, number> = {};
+  const byCategory: Record<string, number> = {};
+  let pinned = 0;
+  let recentlyAccessed = 0;
+
+  const weekAgo = new Date();
+  weekAgo.setDate(weekAgo.getDate() - 7);
+
+  for (const m of memories) {
+    byType[m.type] = (byType[m.type] || 0) + 1;
+    if (m.category) {
+      byCategory[m.category] = (byCategory[m.category] || 0) + 1;
+    }
+    if (m.isPinned === 1) pinned++;
+    if (m.lastAccessedAt && m.lastAccessedAt > weekAgo) recentlyAccessed++;
+  }
+
+  return {
+    total: memories.length,
+    byType,
+    byCategory,
+    pinned,
+    recentlyAccessed,
+  };
+}

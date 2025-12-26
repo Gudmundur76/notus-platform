@@ -7,6 +7,7 @@ import { feedbackRouter } from "./feedbackRouter";
 import { platformRouter } from "./platformRouter";
 import { memoryRouter } from "./memoryRouter";
 import { skillsRouter } from "./skillsRouter";
+import { webhooksRouter } from "./webhooksRouter";
 import { z } from "zod";
 import { createTask, getUserTasks, getTaskById, getTaskResult, updateTaskStatus, createTaskResult, getUserNotifications, markNotificationAsRead, createNotification } from "./db";
 import { invokeLLM } from "./_core/llm";
@@ -87,6 +88,7 @@ export const appRouter = router({
   platform: platformRouter,
   memory: memoryRouter,
   skills: skillsRouter,
+  webhooks: webhooksRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {

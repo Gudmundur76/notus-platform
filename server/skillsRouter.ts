@@ -31,6 +31,10 @@ import {
   getSkillsForTaskType,
   suggestSkillsForTask,
   getSkillCategories,
+  importSkillFromGitHub,
+  forkSkill,
+  searchSkillsFuzzy,
+  getSkillRecommendations,
 } from "./skills";
 
 export const skillsRouter = router({
@@ -403,4 +407,58 @@ export const skillsRouter = router({
   builtInCount: publicProcedure.query(() => {
     return { count: getBuiltInSkillsCount() };
   }),
+
+  // ============================================
+  // IMPORT & FORK ENDPOINTS
+  // ============================================
+
+  /**
+   * Import skill from GitHub URL
+   */
+  importFromGitHub: protectedProcedure
+    .input(z.object({ url: z.string().url() }))
+    .mutation(async ({ ctx, input }) => {
+      const skill = await importSkillFromGitHub(input.url, ctx.user.id);
+      if (!skill) {
+        throw new Error("Failed to import skill from GitHub. Make sure the URL points to a valid skill repository with a SKILL.md file.");
+      }
+      return skill;
+    }),
+
+  /**
+   * Fork a skill (create a copy for customization)
+   */
+  fork: protectedProcedure
+    .input(z.object({
+      skillId: z.number(),
+      newName: z.string().optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const forked = await forkSkill(input.skillId, ctx.user.id, input.newName);
+      if (!forked) {
+        throw new Error("Failed to fork skill. Make sure the skill exists.");
+      }
+      return forked;
+    }),
+
+  /**
+   * Fuzzy search skills
+   */
+  fuzzySearch: publicProcedure
+    .input(z.object({
+      query: z.string().min(1),
+      limit: z.number().min(1).max(50).default(20),
+    }))
+    .query(async ({ input }) => {
+      return searchSkillsFuzzy(input.query, input.limit);
+    }),
+
+  /**
+   * Get skill recommendations for user
+   */
+  recommendations: protectedProcedure
+    .input(z.object({ limit: z.number().min(1).max(20).default(5) }))
+    .query(async ({ ctx, input }) => {
+      return getSkillRecommendations(ctx.user.id, input.limit);
+    }),
 });

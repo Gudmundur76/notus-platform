@@ -10,6 +10,15 @@ import {
   getKnowledgeByDomain,
   searchKnowledge,
   getDialogueHistory,
+  getAgentTemplates,
+  getAgentTemplateById,
+  createAgentFromTemplate,
+  cloneAgent,
+  getWorkflowTemplates,
+  getWorkflowTemplateById,
+  executeWorkflow,
+  getAgentStats,
+  getAllAgentPairsWithAgents,
 } from "./mirror-agents";
 import { seedAgents } from "./seed-agents";
 import {
@@ -242,4 +251,87 @@ export const mirrorAgentRouter = router({
       await triggerJob(input.name);
       return { success: true };
     }),
+
+  // ============================================================================
+  // Agent Templates
+  // ============================================================================
+
+  getTemplates: protectedProcedure.query(() => {
+    return getAgentTemplates();
+  }),
+
+  getTemplateById: protectedProcedure
+    .input(z.object({ templateId: z.string() }))
+    .query(({ input }) => {
+      return getAgentTemplateById(input.templateId);
+    }),
+
+  createFromTemplate: protectedProcedure
+    .input(z.object({
+      templateId: z.string(),
+      customName: z.string().optional(),
+      customPrompt: z.string().optional(),
+    }))
+    .mutation(async ({ input }) => {
+      return await createAgentFromTemplate(
+        input.templateId,
+        input.customName,
+        input.customPrompt
+      );
+    }),
+
+  // ============================================================================
+  // Agent Cloning
+  // ============================================================================
+
+  cloneAgent: protectedProcedure
+    .input(z.object({
+      agentId: z.number(),
+      newName: z.string().optional(),
+    }))
+    .mutation(async ({ input }) => {
+      return await cloneAgent(input.agentId, input.newName);
+    }),
+
+  // ============================================================================
+  // Workflow Templates
+  // ============================================================================
+
+  getWorkflowTemplates: protectedProcedure.query(() => {
+    return getWorkflowTemplates();
+  }),
+
+  getWorkflowById: protectedProcedure
+    .input(z.object({ workflowId: z.string() }))
+    .query(({ input }) => {
+      return getWorkflowTemplateById(input.workflowId);
+    }),
+
+  executeWorkflow: protectedProcedure
+    .input(z.object({
+      workflowId: z.string(),
+      topic: z.string(),
+      agentPairId: z.number(),
+    }))
+    .mutation(async ({ input }) => {
+      return await executeWorkflow(
+        input.workflowId,
+        input.topic,
+        input.agentPairId
+      );
+    }),
+
+  // ============================================================================
+  // Agent Statistics
+  // ============================================================================
+
+  getAgentStats: protectedProcedure
+    .input(z.object({ agentId: z.number() }))
+    .query(async ({ input }) => {
+      return await getAgentStats(input.agentId);
+    }),
+
+  getAllPairsWithAgents: protectedProcedure.query(async () => {
+    return await getAllAgentPairsWithAgents();
+  }),
 });
