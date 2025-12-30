@@ -27,25 +27,48 @@ This template creates a production-ready container with the Nemotron-3 Nano mode
 
 ## Quick Start
 
-### Option A: Use Pre-built Image (Recommended)
+### Option A: Quick Deploy with RunPod vLLM Worker (Current)
 
-1. Go to RunPod Console → Serverless → Templates
-2. Create new template with:
-   - **Container Image**: `cybergiceland/notus-nemotron:v1.0.0`
-   - **Container Disk**: 100 GB
-   - **Volume Disk**: 0 GB (model is baked in)
+Uses RunPod's official vLLM worker with model downloaded at runtime.
 
-### Option B: Build Your Own Image
+**Current Endpoint:** `x9ozqvygfan4wj`
+**Template ID:** `yq070twny5`
+**Image:** `runpod/worker-v1-vllm:v2.11.1-cuda12.1.0`
 
 ```bash
-# Set HuggingFace token (if model is gated)
-export HF_TOKEN=your_token_here
+# Test the endpoint (OpenAI-compatible)
+curl -X POST "https://api.runpod.ai/v2/x9ozqvygfan4wj/openai/v1/chat/completions" \
+  -H "Authorization: Bearer YOUR_RUNPOD_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16",
+    "messages": [
+      {"role": "system", "content": "You are a wise counselor."},
+      {"role": "user", "content": "What does the Bible say about wisdom?"}
+    ],
+    "max_tokens": 256
+  }'
+```
 
-# Build the image (takes 2-4 hours)
-docker build -t notus-nemotron:v1.0.0 .
+### Option B: Pre-baked Image (Recommended for Production)
+
+1. Build the pre-baked image using `Dockerfile.prebaked`
+2. Push to your Docker registry
+3. Create new template in RunPod with:
+   - **Container Image**: `your-registry/notus-nemotron:v1.0.0`
+   - **Container Disk**: 20 GB (model already in image)
+   - **Volume Disk**: 0 GB
+
+### Option C: Build Custom Pre-baked Image
+
+```bash
+# Make the build script executable
+chmod +x build-prebaked.sh
+
+# Build the image (takes 2-4 hours, downloads 60GB model)
+./build-prebaked.sh your-registry/notus-nemotron:v1.0.0
 
 # Push to your registry
-docker tag notus-nemotron:v1.0.0 your-registry/notus-nemotron:v1.0.0
 docker push your-registry/notus-nemotron:v1.0.0
 ```
 
@@ -135,10 +158,12 @@ This worker is designed for the Notus Universe platform and complies with:
 
 ```
 runpod-template/
-├── Dockerfile          # Container definition with model pre-download
-├── handler.py          # RunPod serverless handler
-├── build-and-push.sh   # Build automation script
-└── README.md           # This file
+├── Dockerfile.prebaked   # Pre-baked image with model included (recommended)
+├── build-prebaked.sh     # Build script for pre-baked image
+├── Dockerfile            # Original custom handler (deprecated)
+├── handler.py            # Original custom handler (deprecated)
+├── build-and-push.sh     # Original build script (deprecated)
+└── README.md             # This file
 ```
 
 ## Integration with Notus Universe

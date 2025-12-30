@@ -1,0 +1,41 @@
+# Dockerfile for Pre-baked Nemotron-3 Nano vLLM Worker
+# This image includes the model weights baked in for faster cold starts
+# Build time: 2-4 hours (model download)
+# Cold start: 2-3 minutes (vs 10-15 minutes without pre-baking)
+
+# Use RunPod's official vLLM worker as base
+FROM runpod/worker-v1-vllm:v2.11.1-cuda12.1.0
+
+# Build arguments
+ARG MODEL_NAME="nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16"
+ARG BASE_PATH="/models"
+ARG HF_TOKEN=""
+
+# Set environment variables
+ENV MODEL_NAME=${MODEL_NAME}
+ENV BASE_PATH=${BASE_PATH}
+ENV HF_HOME=${BASE_PATH}/huggingface
+ENV TRANSFORMERS_CACHE=${BASE_PATH}/huggingface
+ENV MAX_MODEL_LEN=8192
+ENV GPU_MEMORY_UTILIZATION=0.95
+
+# Create model directory
+RUN mkdir -p ${BASE_PATH}/huggingface
+
+# Download model weights during build
+# This bakes the model into the image for faster cold starts
+RUN --mount=type=secret,id=HF_TOKEN,required=false \
+    if [ -f /run/secrets/HF_TOKEN ]; then \
+        export HF_TOKEN=$(cat /run/secrets/HF_TOKEN); \
+    fi && \
+    python3 -c "from huggingface_hub import snapshot_download; \
+    snapshot_download( \
+        repo_id='${MODEL_NAME}', \
+        local_dir='${BASE_PATH}/${MODEL_NAME}', \
+        local_dir_use_symlinks=False \
+    )"
+
+# Set the model path to the local directory
+ENV MODEL_NAME=${BASE_PATH}/${MODEL_NAME}
+
+# The base image already has the correct entrypoint for RunPod serverless
