@@ -1,0 +1,46 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": { "distDir": "dist/public" }
+    },
+    {
+      "src": "api/index.ts",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/cron/(.*)",
+      "dest": "api/cron.ts"
+    },
+    {
+      "src": "/api/(.*)",
+      "dest": "api/index.ts"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/daily-training",
+      "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron/weekly-review",
+      "schedule": "0 3 * * 0"
+    },
+    {
+      "path": "/api/cron/daily-aggregation",
+      "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron/weekly-learning",
+      "schedule": "0 3 * * 0"
+    }
+  ]
+}

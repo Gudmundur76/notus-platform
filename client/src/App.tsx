@@ -28,6 +28,9 @@ import MySkills from "./pages/MySkills";
 import CreateSkill from "./pages/CreateSkill";
 import Webhooks from "./pages/Webhooks";
 import MemoryAnalytics from "./pages/MemoryAnalytics";
+import CommunityDashboard from "./pages/CommunityDashboard";
+import SenateChamber from "./pages/SenateChamber";
+import SharedHistory from "./pages/SharedHistory";
 import { lazy, Suspense } from "react";
 import { Loader2 } from "lucide-react";
 
@@ -66,6 +69,11 @@ function Router() {
       <Route path="/credentials" component={CredentialsVault} />
       <Route path="/deployments" component={DeploymentManager} />
       <Route path="/webhooks" component={Webhooks} />
+      
+      {/* Community of Equals */}
+      <Route path="/community" component={CommunityDashboard} />
+      <Route path="/senate" component={SenateChamber} />
+      <Route path="/history" component={SharedHistory} />
       
       {/* Skills System */}
       <Route path="/skills" component={SkillsMarketplace} />

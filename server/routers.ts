@@ -9,6 +9,9 @@ import { memoryRouter } from "./memoryRouter";
 import { skillsRouter } from "./skillsRouter";
 import { webhooksRouter } from "./webhooksRouter";
 import { memoryAnalyticsRouter } from "./memoryAnalyticsRouter";
+import { communityRouter } from "./community-router";
+import { senateRouter } from "./senate-router";
+import { stewardshipRouter } from "./stewardship-router";
 import { z } from "zod";
 import { createTask, getUserTasks, getTaskById, getTaskResult, updateTaskStatus, createTaskResult, getUserNotifications, markNotificationAsRead, createNotification } from "./db";
 import { invokeLLM } from "./_core/llm";
@@ -91,6 +94,9 @@ export const appRouter = router({
   skills: skillsRouter,
   webhooks: webhooksRouter,
   memoryAnalytics: memoryAnalyticsRouter,
+  community: communityRouter,
+  senate: senateRouter,
+  stewardship: stewardshipRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {

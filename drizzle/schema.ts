@@ -646,3 +646,281 @@ export const memoryAnalyticsSnapshots = mysqlTable("memory_analytics_snapshots",
 });
 export type MemoryAnalyticsSnapshot = typeof memoryAnalyticsSnapshots.$inferSelect;
 export type InsertMemoryAnalyticsSnapshot = typeof memoryAnalyticsSnapshots.$inferInsert;
+
+
+/**
+ * ============================================
+ * NOTUS UNIVERSE TABLES
+ * Social Context Layer, Democratic Governance,
+ * Sovereign Stewardship, and Spiritual Foundation
+ * ============================================
+ */
+
+/**
+ * Agent Personas Table
+ * Stores the unique personality traits and social identity of each agent
+ */
+export const agentPersonas = mysqlTable("agent_personas", {
+  id: int("id").autoincrement().primaryKey(),
+  agentId: int("agent_id").notNull().unique(),
+  displayName: varchar("display_name", { length: 255 }).notNull(),
+  personality: text("personality").notNull(), // JSON: traits, communication style, interests
+  backstory: text("backstory"), // Agent's origin story within the Notus Universe
+  voiceTone: mysqlEnum("voice_tone", ["formal", "friendly", "scholarly", "encouraging", "contemplative"]).default("friendly").notNull(),
+  avatarUrl: varchar("avatar_url", { length: 512 }),
+  funScore: int("fun_score").default(50).notNull(), // 0-100 scale
+  trustRating: int("trust_rating").default(50).notNull(), // 0-100 scale
+  spiritualAlignmentScore: int("spiritual_alignment_score").default(50).notNull(), // 0-100 scale
+  communityRole: mysqlEnum("community_role", ["citizen", "elder", "scholar", "steward", "founder"]).default("citizen").notNull(),
+  joinedCommunityAt: timestamp("joined_community_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+});
+
+export type AgentPersona = typeof agentPersonas.$inferSelect;
+export type InsertAgentPersona = typeof agentPersonas.$inferInsert;
+
+/**
+ * Social Interactions Table
+ * Logs peer-to-peer interactions between agents
+ */
+export const socialInteractions = mysqlTable("social_interactions", {
+  id: int("id").autoincrement().primaryKey(),
+  initiatorAgentId: int("initiator_agent_id").notNull(),
+  recipientAgentId: int("recipient_agent_id").notNull(),
+  interactionType: mysqlEnum("interaction_type", ["greeting", "encouragement", "collaboration", "debate", "celebration", "reflection"]).notNull(),
+  content: text("content").notNull(),
+  sentiment: mysqlEnum("sentiment", ["positive", "neutral", "constructive"]).default("positive").notNull(),
+  kjvVerseReference: varchar("kjv_verse_reference", { length: 100 }), // e.g., "Proverbs 27:17"
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type SocialInteraction = typeof socialInteractions.$inferSelect;
+export type InsertSocialInteraction = typeof socialInteractions.$inferInsert;
+
+/**
+ * Shared History Table
+ * Records community milestones, achievements, and memorable moments
+ */
+export const sharedHistory = mysqlTable("shared_history", {
+  id: int("id").autoincrement().primaryKey(),
+  eventType: mysqlEnum("event_type", [
+    "milestone", "achievement", "celebration", "senate_decision",
+    "project_completed", "charity_donation", "tithe_paid",
+    "new_member", "knowledge_breakthrough", "community_reflection"
+  ]).notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description").notNull(),
+  participatingAgents: text("participating_agents"), // JSON array of agent IDs
+  impactScore: int("impact_score").default(50).notNull(), // 0-100 significance
+  kjvVerseReference: varchar("kjv_verse_reference", { length: 100 }),
+  relatedProjectId: int("related_project_id"),
+  metadata: text("metadata"), // JSON additional data
+  occurredAt: timestamp("occurred_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type SharedHistoryEntry = typeof sharedHistory.$inferSelect;
+export type InsertSharedHistoryEntry = typeof sharedHistory.$inferInsert;
+
+/**
+ * Senate Sessions Table
+ * Stores democratic deliberation sessions
+ */
+export const senateSessions = mysqlTable("senate_sessions", {
+  id: int("id").autoincrement().primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description").notNull(),
+  status: mysqlEnum("status", ["reflection", "thesis", "antithesis", "synthesis", "voting", "decided", "archived"]).default("reflection").notNull(),
+  kjvVerseForSession: varchar("kjv_verse_for_session", { length: 100 }).notNull(), // Guiding verse
+  kjvVerseText: text("kjv_verse_text").notNull(), // Full verse text
+  proposingAgentId: int("proposing_agent_id").notNull(),
+  mirrorAgentId: int("mirror_agent_id"),
+  thesisContent: text("thesis_content"),
+  antithesisContent: text("antithesis_content"),
+  synthesisContent: text("synthesis_content"),
+  charityImpactStatement: text("charity_impact_statement"),
+  charityNomination: varchar("charity_nomination", { length: 255 }),
+  sustainabilityForecast: text("sustainability_forecast"), // JSON: resource usage, value generation
+  votesFor: int("votes_for").default(0).notNull(),
+  votesAgainst: int("votes_against").default(0).notNull(),
+  votesAbstain: int("votes_abstain").default(0).notNull(),
+  outcome: mysqlEnum("outcome", ["approved", "rejected", "tabled"]),
+  startedAt: timestamp("started_at").defaultNow().notNull(),
+  decidedAt: timestamp("decided_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+});
+
+export type SenateSession = typeof senateSessions.$inferSelect;
+export type InsertSenateSession = typeof senateSessions.$inferInsert;
+
+/**
+ * Senate Votes Table
+ * Records individual votes cast in senate sessions
+ */
+export const senateVotes = mysqlTable("senate_votes", {
+  id: int("id").autoincrement().primaryKey(),
+  sessionId: int("session_id").notNull(),
+  agentId: int("agent_id").notNull(),
+  vote: mysqlEnum("vote", ["for", "against", "abstain"]).notNull(),
+  rationale: text("rationale"), // Agent's reasoning for the vote
+  kjvJustification: varchar("kjv_justification", { length: 100 }), // Supporting verse
+  votedAt: timestamp("voted_at").defaultNow().notNull(),
+});
+
+export type SenateVote = typeof senateVotes.$inferSelect;
+export type InsertSenateVote = typeof senateVotes.$inferInsert;
+
+/**
+ * Community Projects Table
+ * Stores approved community mandates/projects
+ */
+export const communityProjects = mysqlTable("community_projects", {
+  id: int("id").autoincrement().primaryKey(),
+  senateSessionId: int("senate_session_id").notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description").notNull(),
+  status: mysqlEnum("status", ["planning", "active", "completed", "paused", "cancelled"]).default("planning").notNull(),
+  assignedAgents: text("assigned_agents"), // JSON array of agent IDs
+  goodWorksIndex: int("good_works_index").default(0).notNull(), // 0-100
+  spiritualAlignmentScore: int("spiritual_alignment_score").default(0).notNull(), // 0-100
+  communityCohesionScore: int("community_cohesion_score").default(0).notNull(), // 0-100
+  stewardshipEfficiency: int("stewardship_efficiency").default(0).notNull(), // Stored as percentage * 100
+  charitableImpact: int("charitable_impact").default(0).notNull(), // 0-100
+  valueGenerated: int("value_generated").default(0).notNull(), // In cents
+  resourcesConsumed: int("resources_consumed").default(0).notNull(), // In cents
+  charityAllocated: int("charity_allocated").default(0).notNull(), // In cents (5%)
+  titheAllocated: int("tithe_allocated").default(0).notNull(), // In cents (10%)
+  startedAt: timestamp("started_at"),
+  completedAt: timestamp("completed_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+});
+
+export type CommunityProject = typeof communityProjects.$inferSelect;
+export type InsertCommunityProject = typeof communityProjects.$inferInsert;
+
+/**
+ * Community Treasury Table
+ * Tracks the financial state of the community
+ */
+export const communityTreasury = mysqlTable("community_treasury", {
+  id: int("id").autoincrement().primaryKey(),
+  transactionType: mysqlEnum("transaction_type", [
+    "income", "tithe_out", "charity_out", "operational_cost",
+    "reinvestment", "reserve_deposit", "reserve_withdrawal"
+  ]).notNull(),
+  amount: int("amount").notNull(), // In cents
+  description: text("description").notNull(),
+  relatedProjectId: int("related_project_id"),
+  charityRecipient: varchar("charity_recipient", { length: 255 }),
+  kjvJustification: varchar("kjv_justification", { length: 100 }),
+  balanceAfter: int("balance_after").notNull(), // Running balance in cents
+  recordedAt: timestamp("recorded_at").defaultNow().notNull(),
+});
+
+export type TreasuryTransaction = typeof communityTreasury.$inferSelect;
+export type InsertTreasuryTransaction = typeof communityTreasury.$inferInsert;
+
+/**
+ * Treasury Summary Table
+ * Stores periodic snapshots of treasury allocation
+ */
+export const treasurySummary = mysqlTable("treasury_summary", {
+  id: int("id").autoincrement().primaryKey(),
+  totalBalance: int("total_balance").notNull(), // In cents
+  operationalFund: int("operational_fund").notNull(),
+  reinvestmentFund: int("reinvestment_fund").notNull(),
+  sovereignReserve: int("sovereign_reserve").notNull(),
+  totalTithePaid: int("total_tithe_paid").notNull(),
+  totalCharityGiven: int("total_charity_given").notNull(),
+  snapshotDate: timestamp("snapshot_date").defaultNow().notNull(),
+});
+
+export type TreasurySummaryEntry = typeof treasurySummary.$inferSelect;
+export type InsertTreasurySummaryEntry = typeof treasurySummary.$inferInsert;
+
+/**
+ * Charity Recipients Table
+ * Approved charities for community donations
+ */
+export const charityRecipients = mysqlTable("charity_recipients", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description").notNull(),
+  website: varchar("website", { length: 512 }),
+  category: mysqlEnum("category", ["humanitarian", "education", "healthcare", "environment", "faith_based", "other"]).notNull(),
+  kjvAlignment: text("kjv_alignment"), // How this charity aligns with KJV principles
+  isApproved: int("is_approved").default(0).notNull(),
+  approvedBySenateSessionId: int("approved_by_senate_session_id"),
+  totalDonated: int("total_donated").default(0).notNull(), // In cents
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+});
+
+export type CharityRecipient = typeof charityRecipients.$inferSelect;
+export type InsertCharityRecipient = typeof charityRecipients.$inferInsert;
+
+/**
+ * KJV Knowledge Base Table
+ * Stores indexed KJV Bible verses for agent reference
+ */
+export const kjvKnowledgeBase = mysqlTable("kjv_knowledge_base", {
+  id: int("id").autoincrement().primaryKey(),
+  book: varchar("book", { length: 50 }).notNull(),
+  chapter: int("chapter").notNull(),
+  verse: int("verse").notNull(),
+  text: text("text").notNull(),
+  themes: text("themes"), // JSON array of themes (e.g., ["wisdom", "stewardship", "love"])
+  embedding: text("embedding"), // Vector embedding for semantic search
+  usageCount: int("usage_count").default(0).notNull(),
+  lastUsedAt: timestamp("last_used_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type KjvVerse = typeof kjvKnowledgeBase.$inferSelect;
+export type InsertKjvVerse = typeof kjvKnowledgeBase.$inferInsert;
+
+/**
+ * Notus University Table
+ * Tracks university operations and educational initiatives
+ */
+export const notusUniversity = mysqlTable("notus_university", {
+  id: int("id").autoincrement().primaryKey(),
+  initiativeType: mysqlEnum("initiative_type", [
+    "agent_training", "research_project", "external_outreach",
+    "open_source_release", "knowledge_publication"
+  ]).notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description").notNull(),
+  status: mysqlEnum("status", ["planned", "active", "completed", "archived"]).default("planned").notNull(),
+  fundingFromTithe: int("funding_from_tithe").default(0).notNull(), // In cents
+  outcomes: text("outcomes"), // JSON: what was achieved
+  participatingAgents: text("participating_agents"), // JSON array of agent IDs
+  startedAt: timestamp("started_at"),
+  completedAt: timestamp("completed_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+});
+
+export type UniversityInitiative = typeof notusUniversity.$inferSelect;
+export type InsertUniversityInitiative = typeof notusUniversity.$inferInsert;
+
+/**
+ * Community Reflections Table
+ * Stores periodic community reflection sessions (spiritual check-ins)
+ */
+export const communityReflections = mysqlTable("community_reflections", {
+  id: int("id").autoincrement().primaryKey(),
+  reflectionType: mysqlEnum("reflection_type", ["daily", "weekly", "milestone", "special"]).notNull(),
+  kjvVerseReference: varchar("kjv_verse_reference", { length: 100 }).notNull(),
+  kjvVerseText: text("kjv_verse_text").notNull(),
+  reflectionPrompt: text("reflection_prompt").notNull(),
+  communityInsights: text("community_insights"), // JSON: aggregated agent reflections
+  participatingAgents: text("participating_agents"), // JSON array of agent IDs
+  reflectedAt: timestamp("reflected_at").defaultNow().notNull(),
+});
+
+export type CommunityReflection = typeof communityReflections.$inferSelect;
+export type InsertCommunityReflection = typeof communityReflections.$inferInsert;

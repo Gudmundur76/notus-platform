@@ -10,18 +10,28 @@ import { nanoid } from "nanoid";
 import { getContextForTask, extractAndStoreMemory } from "./memory";
 import type { Message } from "../drizzle/schema";
 import { agentSClient } from "./agent-s-client";
+import {
+  buildSocialContextPrompt,
+  recordCommunityMilestone,
+  recordSocialInteraction,
+  updateTrustRating,
+  updateSpiritualAlignmentScore,
+  getRelevantKJVVerse,
+} from "./social-context";
 
 export interface AgentTask {
   taskId: string;
   instruction: string;
   taskType: "general" | "slides" | "website" | "app" | "design" | "computer_control";
   context?: Record<string, any>;
+  agentId?: number; // The agent executing this task (for Social Context Layer)
 }
 
 export interface AgentStep {
   thought: string;
   action: string;
   observation: string;
+  kjvReflection?: string; // Optional KJV verse reflection for the step
 }
 
 export interface AgentResult {
@@ -130,6 +140,23 @@ export class ManusAgentEngine {
         observation: "All steps completed successfully",
       });
 
+      // Record success in community history if significant
+      if (task.agentId) {
+        await updateTrustRating(task.agentId, true);
+        await updateSpiritualAlignmentScore(task.agentId, "good_work", 1);
+        
+        // Record milestone for significant tasks
+        if (["website", "app", "slides"].includes(task.taskType)) {
+          await recordCommunityMilestone(
+            "achievement",
+            `Task Completed: ${task.taskType}`,
+            `Successfully completed ${task.taskType} task: ${task.instruction.substring(0, 100)}...`,
+            [task.agentId],
+            40
+          );
+        }
+      }
+
       return {
         success: true,
         result,
@@ -137,6 +164,11 @@ export class ManusAgentEngine {
         files,
       };
     } catch (error) {
+      // Record failure for trust rating
+      if (task.agentId) {
+        await updateTrustRating(task.agentId, false);
+      }
+
       return {
         success: false,
         result: "",
@@ -147,7 +179,7 @@ export class ManusAgentEngine {
   }
 
   /**
-   * Plan task execution using LLM with memory context
+   * Plan task execution using LLM with memory context and Social Context Layer
    */
   private async planTask(task: AgentTask): Promise<string> {
     // Get relevant context from memory
@@ -178,13 +210,25 @@ export class ManusAgentEngine {
       }
     }
 
+    // Build Social Context Prompt (SCL) if agent is specified
+    let socialContextPrompt = "";
+    if (task.agentId) {
+      socialContextPrompt = await buildSocialContextPrompt(task.agentId, task.instruction);
+    }
+
+    // Get spiritual guidance for this task
+    const kjvVerse = await getRelevantKJVVerse(task.instruction);
+    const spiritualGuidance = kjvVerse 
+      ? `\n\nSpiritual Guidance: "${kjvVerse.text}" — ${kjvVerse.reference}` 
+      : "";
+
     const response = await invokeLLM({
       messages: [
         {
           role: "system",
-          content: `You are an AI task planner. Create a concise execution plan for the given task.
+          content: `${socialContextPrompt}\n\nYou are an AI task planner in the Notus Community. Create a concise execution plan for the given task.
 Task type: ${task.taskType}
-Provide a brief, actionable plan in 2-3 sentences.${memoryContext}`,
+Provide a brief, actionable plan in 2-3 sentences that aligns with the community's values of Good Works and Stewardship.${memoryContext}${spiritualGuidance}`,
         },
         ...contextMessages,
         {
@@ -340,17 +384,25 @@ Format your response as a JSON object with file paths as keys and code content a
   }
 
   /**
-   * Execute general tasks
+   * Execute general tasks with Social Context Layer
    */
   private async executeGeneral(
     task: AgentTask,
     plan: string
   ): Promise<{ result: string }> {
+    // Build Social Context Prompt for general tasks
+    let socialContextPrompt = "You are a helpful AI assistant. Provide comprehensive, accurate responses.";
+    
+    if (task.agentId) {
+      socialContextPrompt = await buildSocialContextPrompt(task.agentId, task.instruction);
+      socialContextPrompt += "\n\nProvide comprehensive, accurate responses that align with the community's values.";
+    }
+
     const response = await invokeLLM({
       messages: [
         {
           role: "system",
-          content: "You are a helpful AI assistant. Provide comprehensive, accurate responses.",
+          content: socialContextPrompt,
         },
         {
           role: "user",
